@@ -2,6 +2,10 @@
     --page-bg: #f5f6fa;
     --text: #333;
     --muted: #6b7280;
+    --chip-bg: #eaecef;     /* siva pozadina za buttons */
+    --chip-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);       /* shadow */
+    --save: #28a745;     /* zelena za 'SPASI' button */
+    --save-hover: #218838;      /* hover zelena za 'SPASI' button */
 }
 
 * {
@@ -18,4 +22,88 @@ body {
     background: var(--page-bg);
     color: var(--text);
     font-family: "Poppins", "Inter", sans-serif;
+}
+
+.topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 16px;
+    background: #fff;
+    border-bottom: 1px solid #e9ebf2;
+    flex-wrap: wrap;
+}
+
+.left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.project-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.icon-btn {
+    display: inline-grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid #e7e9ef;
+    background: #fff;
+    color: #434955;
+    cursor: pointer;
+}
+
+.toolbar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    flex-grow: 1;
+}
+
+.chip {
+    text-transform: uppercase;
+    font-weight: 700;
+    font-size: 12px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: none;
+    background-color: var(--chip-bg);
+    box-shadow: var(--chip-shadow);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.chip:hover {
+    background: #f0f0f0;
+}
+
+.right {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.save-btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 999px;
+    color: #fff;
+    background: var(--save);
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.save-btn:hover {
+    background: var(--save-hover);
 }
