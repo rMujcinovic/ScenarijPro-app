@@ -181,3 +181,30 @@ body {
     border-left: 6px solid var(--accent);
     padding-left: 8px;
 }
+
+.editor-wrap {
+  min-width: 0;
+}
+
+.paper {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  padding: 48px 64px;
+  border: 1px solid #eef1f6;
+  font-family: "Courier Prime", "Courier New", monospace;
+  line-height: 1.65;
+}
+
+.paper p {
+  margin: 1.5em 0;
+}
+
+.scene-heading {
+  color: #d68a00;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 1.5em 0;
+  font-weight: 700;
+  text-align: left;
+}
