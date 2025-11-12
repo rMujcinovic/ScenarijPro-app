@@ -6,6 +6,10 @@
     --chip-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);       /* shadow */
     --save: #28a745;     /* zelena za 'SPASI' button */
     --save-hover: #218838;      /* hover zelena za 'SPASI' button */
+    --sidebar-w: 250px;
+    --radius: 12px;
+    --accent: #5b3fff;
+    --active-fill: #e9eeff;
 }
 
 * {
@@ -106,4 +110,74 @@ body {
 
 .save-btn:hover {
     background: var(--save-hover);
+}
+
+.layout {
+    display: grid;
+    grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+    gap: 16px;
+    padding: 16px;
+}
+
+.scenes {
+    background: #fff;
+    border: 1px solid #eceff4;
+    border-radius: var(--radius);
+    padding: 14px;
+    height: fit-content;
+}
+
+.scenes-header {
+    margin-bottom: 10px;
+}
+
+.scenes-header h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.scenes-header .count {
+    color: var(--muted);
+}
+
+.scene-list {
+    list-style: none;
+    margin: 10px 0 0 0;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+}
+
+.scene-item {
+    border: 1px solid #e6e9f1;
+    border-radius: 10px;
+    padding: 10px 12px;
+    background: #fff;
+}
+
+.scene-item .scene-main {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+}
+
+.scene-num {
+    font-weight: 700;
+}
+
+.scene-title {
+    font-weight: 600;
+}
+
+.scene-pages {
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.scene-item.active {
+    background: var(--active-fill);
+    border-left: 6px solid var(--accent);
+    padding-left: 8px;
 }
