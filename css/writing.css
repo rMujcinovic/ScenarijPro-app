@@ -1,0 +1,21 @@
+:root {
+    --page-bg: #f5f6fa;
+    --text: #333;
+    --muted: #6b7280;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    background: var(--page-bg);
+    color: var(--text);
+    font-family: "Poppins", "Inter", sans-serif;
+}
