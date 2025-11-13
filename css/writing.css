@@ -208,3 +208,21 @@ body {
   font-weight: 700;
   text-align: left;
 }
+
+@media (max-width: 750px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .scenes {
+    order: -1;
+  }
+
+  .project-title {
+    font-size: 15px;
+  }
+
+  .paper {
+    padding: 28px 18px;
+  }
+}
