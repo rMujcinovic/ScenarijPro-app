@@ -65,6 +65,30 @@
             />
           </div>
         </section>
+
+        <section class="section warning">
+          <h2 class="section-title">Sigurnosne postavke</h2>
+
+          <div class="field">
+            <label for="newPassword">Nova šifra</label>
+            <input
+              id="newPassword"
+              name="newPassword"
+              type="password"
+              placeholder="********"
+            />
+            <p class="hint-text">
+              Ostavite prazno ako ne želite mijenjati trenutnu šifru.
+            </p>
+          </div>
+
+          <div class="field">
+            <label class="checkbox-label" for="twofa">
+              <input id="twofa" name="twofa" type="checkbox" />
+              Omogući Two-Factor Authentication (2FA)
+            </label>
+          </div>
+        </section>
       </form>
     </main>
   </body>
