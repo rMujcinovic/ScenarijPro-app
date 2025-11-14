@@ -152,3 +152,63 @@ select:focus {
   color: var(--text);
 }
 
+.section.section.notifications {
+    background: var(--section-green);
+}
+
+/* Radios */
+.radios {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: 10px;
+    margin: 0 0 var(--gap) 0;
+    border: 0;
+    padding: 0;
+}
+
+.radios .radios-inline {
+    display: flex;
+    gap: 18px;
+    align-items: center;
+}
+
+.radios label {
+    font-weight: 500;
+    color: var(--text);
+}
+
+/* Footer */
+.form-foot {
+    margin-top: 18px;
+    display: grid;
+    gap: 14px;
+}
+
+.form-foot hr {
+    border: 0;
+    border-top: 1px solid var(--stroke);
+    margin: 0;
+}
+
+.btn-primary {
+    justify-self: center;
+    min-width: 220px;
+    height: 44px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--primary);
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color .15s ease, transform .05s ease;
+}
+
+.btn-primary:hover {
+    background: var(--primary-hover);
+}
+
+.btn-primary:active {
+    transform: translateY(1px);
+}
+
+
