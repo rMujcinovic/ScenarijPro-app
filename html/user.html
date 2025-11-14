@@ -89,6 +89,44 @@
             </label>
           </div>
         </section>
+
+        <section class="section notifications">
+          <h2 class="section-title">Notifikacije</h2>
+
+          <fieldset class="field radios">
+            <legend>Preferirani način komunikacije</legend>
+            <div class="radios-inline">
+              <label>
+                <input type="radio" name="contact" value="email" checked>
+                Email
+              </label>
+              <label>
+                <input type="radio" name="contact" value="sms">
+                SMS
+              </label>
+              <label>
+                <input type="radio" name="contact" value="none">
+                Ništa
+              </label>
+            </div>
+          </fieldset>
+
+          <div class="field">
+            <label for="freq">Učestalost notifikacija</label>
+            <select id="freq" name="freq">
+              <option value="daily" selected>Dnevno</option>
+              <option value="weekly" selected>Sedmično</option>
+              <option value="monthly" selected>Mjesečno</option>
+              <option value="none" selected>Nikad</option>
+            </select>
+          </div>
+        </section>
+
+        <footer class="form-foot">
+          <hr>
+          <button class="btn-primary" type="submit">Spasi promjene</button>
+        </footer>
+
       </form>
     </main>
   </body>
