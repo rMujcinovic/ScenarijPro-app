@@ -1,0 +1,72 @@
+:root {
+    --page-bg: #f5f6fa;
+    --card-bg: #fff;
+    --text: #333;
+    --muted: #6b7280;
+    --primary: #5B3FFF;
+    --primary-hover: #4b33d8;
+    --stroke: #e7e9f1;
+    --section-blue: #eef2ff;
+    --section-red: #fff3f1;
+    --section-green: #f1f8f4;
+    --radius: 14px;
+    --gap: 14px;
+    --maxw: 840px;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html, 
+body {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    background: var(--page-bg);
+    color: var(--text);
+    font-family: "Poppins", "Inter", sans-serif;
+}
+
+.wrap {
+    min-height: 100dvh;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+}
+
+.card {
+    width: min(100%, var(--maxw));
+    background: var(--card-bg);
+    border: 1px solid var(--stroke);
+    border-radius: var(--radius);
+    box-shadow: 0 10px 18px rgba(0, 0, 0, .05);
+}
+
+.form {
+    padding: 22px;
+}
+
+.form-head h1 {
+    margin: 0 0 6px 0;
+    font-size: 26px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.form-head .accent {
+    height: 3px;
+    border: 0;
+    background: #3b82f6;
+    margin: 6px auto 10px;
+    width: 240px;
+    border-radius: 999px;
+}
+
+.form-head .sub {
+    margin: 0 0 14px 0;
+    text-align: center;
+    color: var(--muted);
+}
