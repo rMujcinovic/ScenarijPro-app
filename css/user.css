@@ -72,35 +72,35 @@ body {
 }
 
 .section {
-  margin-top: 16px;
-  padding: 16px;
-  border: 1px solid var(--stroke);
-  border-radius: 12px;
-  background: var(--section-blue);
+    margin-top: 16px;
+    padding: 16px;
+    border: 1px solid var(--stroke);
+    border-radius: 12px;
+    background: var(--section-blue);
 }
 
 .section-title {
-  margin: 0 0 10px 0;
-  font-size: 16px;
-  font-weight: 700;
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    font-weight: 700;
 }
 
 .field {
-  display: grid;
-  grid-template-columns: 240px minmax(0, 1fr);
-  align-items: center;
-  gap: 10px;
-  margin-bottom: var(--gap);
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    margin-bottom: var(--gap);
 }
 
 .field:last-child {
-  margin-bottom: 0;
+    margin-bottom: 0;
 }
 
-.field > label,
-.radios > legend {
-  font-weight: 600;
-  color: var(--text);
+.field>label,
+.radios>legend {
+    font-weight: 600;
+    color: var(--text);
 }
 
 input[type="text"],
@@ -108,48 +108,48 @@ input[type="email"],
 input[type="number"],
 input[type="password"],
 select {
-  height: 42px;
-  padding: 0 12px;
-  border: 1px solid #dfe3eb;
-  border-radius: 10px;
-  outline: none;
-  background: #fff;
-  color: var(--text);
+    height: 42px;
+    padding: 0 12px;
+    border: 1px solid #dfe3eb;
+    border-radius: 10px;
+    outline: none;
+    background: #fff;
+    color: var(--text);
 }
 
 input::placeholder {
-  color: #9aa3b2;
+    color: #9aa3b2;
 }
 
 input:focus,
 select:focus {
-  border-color: #cdd4e1;
+    border-color: #cdd4e1;
 }
 
 .section.warning {
-  background: var(--section-red);
+    background: var(--section-red);
 }
 
 /* Security sekcija: sve u jednoj koloni */
 .section.warning .field {
-  grid-template-columns: 1fr;
-  align-items: flex-start;
+    grid-template-columns: 1fr;
+    align-items: flex-start;
 }
 
 /* hint ispod password polja */
 .section.warning .hint-text {
-  margin: 4px 0 0 0;
-  font-size: 13px;
-  color: var(--muted);
+    margin: 4px 0 0 0;
+    font-size: 13px;
+    color: var(--muted);
 }
 
 /* checkbox linija */
 .section.warning .checkbox-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
-  color: var(--text);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: var(--text);
 }
 
 .section.section.notifications {
@@ -211,4 +211,21 @@ select:focus {
     transform: translateY(1px);
 }
 
+/* Responsive: labels above inputs under 750px */
+@media (max-width: 750px) {
 
+    .field,
+    .radios {
+        grid-template-columns: 1fr;
+    }
+
+    .checkbox-row {
+        grid-template-columns: 1fr;
+        justify-items: start;
+    }
+
+    .radios .radios-inline {
+        flex-wrap: wrap;
+        row-gap: 6px;
+    }
+}
