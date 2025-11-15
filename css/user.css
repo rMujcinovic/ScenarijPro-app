@@ -81,8 +81,28 @@ body {
 
 .section-title {
     margin: 0 0 10px 0;
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 700;
+}
+
+.account-section .section-title {
+    color: #3b82f6;
+}
+
+.security-section {
+    background: var(--section-red);
+}
+
+.security-section .section-title {
+    color: #dc2626; 
+}
+
+.notification-section {
+    background: var(--section-green);
+}
+
+.notification-section .section-title {
+    color: #047857; 
 }
 
 .field {
@@ -126,9 +146,6 @@ select:focus {
     border-color: #cdd4e1;
 }
 
-.section.warning {
-    background: var(--section-red);
-}
 
 /* Security sekcija: sve u jednoj koloni */
 .section.warning .field {
@@ -152,11 +169,7 @@ select:focus {
     color: var(--text);
 }
 
-.section.section.notifications {
-    background: var(--section-green);
-}
 
-/* Radios */
 .radios {
     display: grid;
     grid-template-columns: 240px minmax(0, 1fr);
@@ -177,7 +190,7 @@ select:focus {
     color: var(--text);
 }
 
-/* Footer */
+
 .form-foot {
     margin-top: 18px;
     display: grid;
@@ -211,7 +224,7 @@ select:focus {
     transform: translateY(1px);
 }
 
-/* Responsive: labels above inputs under 750px */
+
 @media (max-width: 750px) {
 
     .field,
