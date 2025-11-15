@@ -1,133 +1,109 @@
 <!DOCTYPE html>
 <html lang="bs">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ScenarijPro — Postavke korisničkog računa</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@400;600;700&display=swap"
-      rel="stylesheet"
-    >
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ScenarijPro — Postavke korisničkog računa</title>
 
-    <link rel="stylesheet" href="user.css">
-  </head>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@400;600;700&display=swap"
+    rel="stylesheet">
 
-  <body>
-    <main class="wrap">
-      <form class="card form" action="#" method="post" autocomplete="off">
-        <header class="form-head">
-          <h1>Postavke korisničkog računa</h1>
-          <hr class="accent">
-          <p class="sub">
-            <em
-              >Upravljajte vašim korisničkim računom, sigurnosnim postavkama i
-              notifikacijama.</em
-            >
+  <link rel="stylesheet" href="user.css">
+</head>
+
+<body>
+  <main class="wrap">
+    <form class="card form" action="#" method="post" autocomplete="off">
+      <header class="form-head">
+        <h1>Postavke korisničkog računa</h1>
+        <hr class="accent">
+        <p class="sub">
+          <em>Upravljajte vašim korisničkim računom, sigurnosnim postavkama i
+            notifikacijama.</em>
+        </p>
+      </header>
+
+      <section class="section account-section">
+        <h2 class="section-title">Podaci o korisničkom računu</h2>
+
+        <div class="field">
+          <label for="fullName">Ime i prezime</label>
+          <input id="fullName" name="fullName" type="text" placeholder="npr. John Doe">
+        </div>
+
+        <div class="field">
+          <label for="email">Email adresa</label>
+          <input id="email" name="email" type="email" placeholder="john.doe@example.com">
+        </div>
+
+        <div class="field">
+          <label for="perPage">Broj elemenata po stranici (1–100)</label>
+          <input id="perPage" name="perPage" type="number" min="1" max="100" step="1" placeholder="25">
+        </div>
+      </section>
+
+      <section class="section warning security-section">
+        <h2 class="section-title">Sigurnosne postavke</h2>
+
+        <div class="field">
+          <label for="newPassword">Nova šifra</label>
+          <input id="newPassword" name="newPassword" type="password" placeholder="********">
+          <p class="hint-text">
+            Ostavite prazno ako ne želite mijenjati trenutnu šifru.
           </p>
-        </header>
+        </div>
 
-        <section class="section account-section">
-          <h2 class="section-title">Podaci o korisničkom računu</h2>
+        <div class="field">
+          <label class="checkbox-label" for="twofa">
+            <input id="twofa" name="twofa" type="checkbox">
+            Omogući Two-Factor Authentication (2FA)
+          </label>
+        </div>
+      </section>
 
-          <div class="field">
-            <label for="fullName">Ime i prezime</label>
-            <input
-              id="fullName"
-              name="fullName"
-              type="text"
-              placeholder="npr. John Doe"
-            >
-          </div>
+      <section class="section notifications notification-section">
+        <h2 class="section-title">Notifikacije</h2>
 
-          <div class="field">
-            <label for="email">Email adresa</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              placeholder="john.doe@example.com"
-            >
-          </div>
-
-          <div class="field">
-            <label for="perPage">Broj elemenata po stranici (1–100)</label>
-            <input
-              id="perPage"
-              name="perPage"
-              type="number"
-              min="1"
-              max="100"
-              step="1"
-              placeholder="25"
-            >
-          </div>
-        </section>
-
-        <section class="section warning security-section">
-          <h2 class="section-title">Sigurnosne postavke</h2>
-
-          <div class="field">
-            <label for="newPassword">Nova šifra</label>
-            <input
-              id="newPassword"
-              name="newPassword"
-              type="password"
-              placeholder="********"
-            >
-            <p class="hint-text">
-              Ostavite prazno ako ne želite mijenjati trenutnu šifru.
-            </p>
-          </div>
-
-          <div class="field">
-            <label class="checkbox-label" for="twofa">
-              <input id="twofa" name="twofa" type="checkbox">
-              Omogući Two-Factor Authentication (2FA)
+        <fieldset class="field radios">
+          <legend>Preferirani način komunikacije</legend>
+          <div class="radios-inline">
+            <label>
+              <input type="radio" name="contact" value="email" checked>
+              Email
+            </label>
+            <label>
+              <input type="radio" name="contact" value="sms">
+              SMS
+            </label>
+            <label>
+              <input type="radio" name="contact" value="none">
+              Ništa
             </label>
           </div>
-        </section>
+        </fieldset>
 
-        <section class="section notifications notification-section">
-          <h2 class="section-title">Notifikacije</h2>
+        <div class="field field-column">
+          <label for="freq">Učestalost notifikacija</label>
+          <select id="freq" name="freq">
+            <option value="daily" selected>Dnevno</option>
+            <option value="weekly">Sedmično</option>
+            <option value="monthly">Mjesečno</option>
+            <option value="none">Nikad</option>
+          </select>
+        </div>
+      </section>
 
-          <fieldset class="field radios">
-            <legend>Preferirani način komunikacije</legend>
-            <div class="radios-inline">
-              <label>
-                <input type="radio" name="contact" value="email" checked>
-                Email
-              </label>
-              <label>
-                <input type="radio" name="contact" value="sms">
-                SMS
-              </label>
-              <label>
-                <input type="radio" name="contact" value="none">
-                Ništa
-              </label>
-            </div>
-          </fieldset>
+      <footer class="form-foot">
+        <hr>
+        <button class="btn-primary" type="submit">Spasi promjene</button>
+      </footer>
 
-          <div class="field">
-            <label for="freq">Učestalost notifikacija</label>
-            <select id="freq" name="freq">
-              <option value="daily" selected>Dnevno</option>
-              <option value="weekly">Sedmično</option>
-              <option value="monthly">Mjesečno</option>
-              <option value="none">Nikad</option>
-            </select>
-          </div>
-        </section>
+    </form>
+  </main>
+</body>
 
-        <footer class="form-foot">
-          <hr>
-          <button class="btn-primary" type="submit">Spasi promjene</button>
-        </footer>
-
-      </form>
-    </main>
-  </body>
 </html>
