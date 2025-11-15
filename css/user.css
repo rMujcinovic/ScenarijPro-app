@@ -123,6 +123,11 @@ body {
     color: var(--text);
 }
 
+.field-column {
+    grid-template-columns: 1fr;
+    align-items: flex-start;
+}
+
 input[type="text"],
 input[type="email"],
 input[type="number"],
@@ -144,6 +149,20 @@ input::placeholder {
 input:focus,
 select:focus {
     border-color: #cdd4e1;
+}
+
+.account-section input[type="text"],
+.account-section input[type="email"],
+.account-section input[type="number"] {
+    border: 1px solid #91a5f8
+}
+
+.security-section input[type="password"] {
+    border-color: #fca5a5;
+}
+
+.notification-section select {
+    border-color: #6ee7b7;
 }
 
 
