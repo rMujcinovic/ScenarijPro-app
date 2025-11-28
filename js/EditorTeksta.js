@@ -56,6 +56,11 @@ let EditorTeksta = function (divRef) {
         return regex.test(t);
     }
 
+    function isParenLine(line) {
+        let t = line.trim();
+        return /^\(.*\)$/.test(t);
+    }
+
     // tree walker prolazi kroz DOM cvor po cvor po filteru (u ovom slucaju text)
     let dajBrojRijeci = function () {
         let walker = document.createTreeWalker(
