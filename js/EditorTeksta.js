@@ -355,8 +355,66 @@ let EditorTeksta = function (divRef) {
         };
     }
 
-    let dajUloge = function() {
+    let dajUloge = function () {
         let parsed = parseScript();
         return Object.keys(parsed.roleMap);
+    };
+
+    function editDistance(a, b) {
+        let m = a.length;
+        let n = b.length;
+        let dp = new Array(m + 1);
+        for (let i = 0; i <= m; i++) {
+            dp[i] = new Array(n + 1);
+        }
+        for (let i = 0; i <= m; i++) dp[i][0] = i;
+        for (let j = 0; j <= n; j++) dp[0][j] = j;
+
+        for (let i = 1; i <= m; i++) {
+            for (let j = 1; j <= n; j++) {
+                let cost = a[i - 1] === b[j - 1] ? 0 : 1;
+                dp[i][j] = Math.min(
+                    dp[i - 1][j] + 1,
+                    dp[i][j - 1] + 1,
+                    dp[i - 1][j - 1] + cost
+                );
+            }
+        }
+        return dp[m][n];
+    }
+
+    let pogresnaUloga = function () {
+        let parsed = parseScript();
+        let roleMap = parsed.roleMap;
+        let names = Object.keys(roleMap);
+
+        let sumnjive = new Set();
+
+        for (let i = 0; i < names.length; i++) {
+            let A = names[i];
+            let countA = roleMap[A].count;
+
+            for (let j = 0; j < names.length; j++) {
+                if (i === j) continue;
+                let B = names[j];
+                let countB = roleMap[B].count;
+
+                if (countB < 4) continue;
+                if (countB < countA + 3) continue;
+
+                let sA = A.replace(/\s+/g, "");
+                let sB = B.replace(/\s+/g, "");
+                let dist = editDistance(sA, sB);
+                let maxLen = Math.max(sA.length, sB.length);
+                let threshold = maxLen <= 5 ? 1 : 2;
+
+                if (dist <= threshold) {
+                    sumnjive.add(A);
+                    break;
+                }
+            }
+        }
+
+        return names.filter(n => sumnjive.has(n));
     };
 }
