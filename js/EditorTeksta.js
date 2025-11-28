@@ -61,6 +61,22 @@ let EditorTeksta = function (divRef) {
         return /^\(.*\)$/.test(t);
     }
 
+    function isAllCapsName(line) {
+        let t = line.trim();
+        if (!t) return false;
+
+        // mora biti veliko
+        if (t !== t.toUpperCase()) return false;
+
+        // mora sadržavati barem jedno slovo
+        if (!/[A-ZČĆŠĐŽ]/.test(t)) return false;
+
+        // format: RIJEC ili RIJEC RIJEC ... (ne smije biti broj, tačka, razmak unutar riječi, itd.)
+        if (!/^[A-ZČĆŠĐŽ]+(?: [A-ZČĆŠĐŽ]+)*$/.test(t)) return false;
+
+        return true;
+    }
+
     // tree walker prolazi kroz DOM cvor po cvor po filteru (u ovom slucaju text)
     let dajBrojRijeci = function () {
         let walker = document.createTreeWalker(
