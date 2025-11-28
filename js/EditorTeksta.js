@@ -354,4 +354,9 @@ let EditorTeksta = function (divRef) {
             roleMap: roleMap
         };
     }
+
+    let dajUloge = function() {
+        let parsed = parseScript();
+        return Object.keys(parsed.roleMap);
+    };
 }
