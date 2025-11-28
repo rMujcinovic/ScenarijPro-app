@@ -8,7 +8,7 @@ let EditorTeksta = function (divRef) {
 
     function hasTagInAncestors(node, tagNames) {
         let el = node.parentNode;
-        tagNames = tagNames.map(t => t.toUpperCase());
+        tagNames = tagNames.map(t => t.toUpperCase());      // map prolazi kroz svaki element niza tagNames i za svaki element poziva funkciju toupper
         while (el && el !== divRef) {
             if (el.nodeType === 1 && tagNames.includes(el.tagName.toUpperCase())) {
                 return true;
@@ -46,6 +46,14 @@ let EditorTeksta = function (divRef) {
             el = el.parentNode;
         }
         return divRef;
+    }
+
+    function isSceneTitle(line) {
+        let t = line.trim();
+        if (!t) return false;
+        if (t !== t.toUpperCase()) return false;
+        let regex = /^(INT\.|EXT\.)\s+.+-\s+(DAY|NIGHT|AFTERNOON|MORNING|EVENING)\s*$/;
+        return regex.test(t);
     }
 
     // tree walker prolazi kroz DOM cvor po cvor po filteru (u ovom slucaju text)
@@ -92,13 +100,13 @@ let EditorTeksta = function (divRef) {
         let italicFlags = [];
 
         function flushWord() {
-            if (wordChars.length === 0) return; 
+            if (wordChars.length === 0) return;
 
             let wordStr = wordChars.join("");
             if (hasLetter(wordStr)) {
                 ukupno++;
 
-                let allBold = boldFlags.length > 0 && boldFlags.every(v=>v===true);
+                let allBold = boldFlags.length > 0 && boldFlags.every(v => v === true);     // => testira da li je svaki element niza true
                 if (allBold) boldiranih++;
 
                 let allItalic = italicFlags.length > 0 && italicFlags.every(v => v === true);
@@ -124,9 +132,221 @@ let EditorTeksta = function (divRef) {
         flushWord();
 
         return {
-            ukupno: ukupno, 
-            boldiranih: boldiranih, 
-            italic: italic, 
+            ukupno: ukupno,
+            boldiranih: boldiranih,
+            italic: italic,
         };
     };
+
+    // helper funkcija koja jednom parsira cijeli tekst, umjesto da se to izvodi iznova kad god treba
+    function parseScript() {
+        let text = divRef.innerText || "";
+        let rawLines = text.split(/\r?\n/);
+
+        let scenes = [];
+        let currentScene = {
+            title: null,
+            lines: [],
+            startIndex: 0
+        };
+
+        for (let i = 0; i < rawLines.length; i++) {
+            let line = rawLines[i];
+            if (isSceneTitle(line)) {
+                if (currentScene.title !== null || currentScene.lines.length > 0) {
+                    scenes.push(currentScene);
+                }
+                currentScene = {
+                    title: line.trim(),
+                    lines: [],
+                    startIndex: i
+                };
+            } else {
+                currentScene.lines.push({
+                    globalIndex: i,
+                    text: line
+                });
+            }
+        }
+
+        if (currentScene.title !== null || currentScene.lines.length > 0) {
+            scenes.push(currentScene);
+        }
+
+        if (scenes.length > 0 && !scenes[0].title) {
+            scenes[0].title = "SCENE 1";
+        }
+
+        let roleMap = {};
+
+        scenes.forEach((scene, sceneIdx) => {
+            let L = scene.lines;
+            let n = L.length;
+            let types = new Array(n).fill("unknown");
+
+            for (let i = 0; i < n; i++) {
+                let t = L[i].text.trim();
+                if (t === "") {
+                    types[i] = "empty";
+                } else if (isParenLine(t)) {
+                    types[i] = "paren";
+                }
+            }
+
+            function isRoleStart(i) {
+                if (types[i] === "empty" || types[i] === "paren") return false;
+                let line = L[i].text.trim();
+                if (!isAllCapsName(line)) return false;
+
+                for (let j = i + 1; j < n; j++) {
+                    let t2 = L[j].text.trim();
+                    if (t2 === "") continue;
+                    if (isParenLine(t2)) continue;
+                    if (isSceneTitle(t2)) return false;
+                    if (isAllCapsName(t2)) return false;
+                    return true;
+                }
+                return false;
+            }
+
+            let blocksScene = [];
+            let replikaCounterInScene = 0;
+
+            for (let i = 0; i < n; i++) {
+                if (isRoleStart(i)) {
+                    types[i] = "roleHeader";
+                    let roleName = L[i].text.trim();
+
+                    let speechLines = [];
+                    let speechIdxs = [];
+
+                    let k = i + 1;
+                    for (; k < n; k++) {
+                        let tline = L[k].text;
+                        let tr = tline.trim();
+
+                        if (tr === "") {
+                            break;
+                        }
+                        if (isSceneTitle(tr)) {
+                            break;
+                        }
+                        if (isAllCapsName(tr) && isRoleStart(k)) {
+                            break;
+                        }
+                        if (isParenLine(tr)) {
+                            types[k] = "paren";
+                            continue;
+                        }
+
+                        // linije koje pocinju sa velikim rijecima i dvotackom (ACTION:, NOTE: itd) tretiramo kao akcijski segment, koji prekida blok govora
+                        if (/^[A-ZČĆŠĐŽ]+:/.test(tr)) {
+                            types[k] = "action";
+                            break;
+                        }
+
+                        types[k] = "speech";
+                        speechLines.push(tline);
+                        speechIdxs.push(k);
+                    }
+
+
+                    if (speechLines.length === 0) {
+                        types[i] = "action";
+                        continue;
+                    }
+
+                    replikaCounterInScene++;
+                    if (!roleMap[roleName]) {
+                        roleMap[roleName] = {
+                            name: roleName,
+                            count: 0,
+                            blocks: []
+                        };
+                    }
+                    roleMap[roleName].count++;
+
+                    let block = {
+                        role: roleName,
+                        sceneTitle: scene.title,
+                        sceneIndex: sceneIdx,
+                        headerLine: i,
+                        startLine: i,
+                        endLine: k - 1,
+                        speechLines: speechLines.slice(),
+                        speechIdxs: speechIdxs.slice(),
+                        positionInScene: replikaCounterInScene,
+                        segmentIndex: null,
+                        indexInSegment: null
+                    };
+
+                    blocksScene.push(block);
+                    i = k - 1;
+                }
+            }
+
+            for (let i = 0; i < n; i++) {
+                if (types[i] === "unknown") {
+                    types[i] = "action";
+                }
+            }
+
+            let segments = [];
+            let currentSeg = null;
+            let segCounter = 0;
+
+            for (let bIndex = 0; bIndex < blocksScene.length; bIndex++) {
+                let blk = blocksScene[bIndex];
+                let needNewSeg = false;
+
+                if (bIndex === 0) {
+                    needNewSeg = true;
+                } else {
+                    let prevBlk = blocksScene[bIndex - 1];
+                    let hasActionBetween = false;
+
+                    for (let li = prevBlk.endLine + 1; li < blk.headerLine; li++) {
+                        if (types[li] === "action") {
+                            hasActionBetween = true;
+                            break;
+                        }
+                    }
+
+                    if (hasActionBetween) {
+                        needNewSeg = true;
+                    }
+                }
+
+                if (needNewSeg) {
+                    if (currentSeg) {
+                        segments.push(currentSeg);
+                    }
+                    segCounter++;
+                    currentSeg = {
+                        index: segCounter,
+                        blocks: []
+                    };
+                }
+
+                blk.segmentIndex = segCounter;
+                blk.indexInSegment = currentSeg.blocks.length + 1;
+                currentSeg.blocks.push(blk);
+
+                roleMap[blk.role].blocks.push(blk);
+            }
+
+            if (currentSeg) {
+                segments.push(currentSeg);
+            }
+
+            scene.types = types;
+            scene.blocks = blocksScene;
+            scene.segments = segments;
+        });
+
+        return {
+            scenes: scenes,
+            roleMap: roleMap
+        };
+    }
 }
