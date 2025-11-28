@@ -433,4 +433,29 @@ let EditorTeksta = function (divRef) {
 
         return names.filter(n => sumnjive.has(n));
     };
+
+    let brojLinijaTeksta = function (uloga) {
+        if (!uloga) return 0;
+
+        let parsed = parseScript();
+        let roleMap = parsed.roleMap;
+        let target = uloga.trim().toUpperCase();
+
+        let canonical = null;
+        for (let name in roleMap) {
+            if (name.toUpperCase() === target) {
+                canonical = name;
+                break;
+            }
+        }
+        if (!canonical) return 0;
+
+        let total = 0;
+        let roleData = roleMap[canonical];
+        roleData.blocks.forEach(block => {
+            total += block.speechLines.length;
+        });
+
+        return total;
+    };
 }
