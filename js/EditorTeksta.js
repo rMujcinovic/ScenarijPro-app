@@ -545,4 +545,30 @@ let EditorTeksta = function (divRef) {
 
         return result;
     };
+
+    let formatirajTekst = function (komanda) {
+        let selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return false;
+        if (selection.isCollapsed) return false;
+
+        let range = selection.getRangeAt(0);
+
+        if (
+            !isDescendant(selection.anchorNode, divRef) ||
+            !isDescendant(selection.focusNode, divRef)
+        ) {
+            return false;
+        }
+
+        let map = {
+            bold: "bold",
+            italic: "italic",
+            underline: "underline"
+        };
+
+        if (!map[komanda]) return false;
+
+        document.execCommand(map[komanda], false, null);
+        return true;
+    };
 }
