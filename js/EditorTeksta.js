@@ -458,4 +458,61 @@ let EditorTeksta = function (divRef) {
 
         return total;
     };
+
+    let scenarijUloge = function (uloga) {
+        if (!uloga) return [];
+
+        let parsed = parseScript();
+        let roleMap = parsed.roleMap;
+        let target = uloga.trim().toUpperCase();
+
+        let canonical = null;
+        for (let name in roleMap) {
+            if (name.toUpperCase() === target) {
+                canonical = name;
+                break;
+            }
+        }
+        if (!canonical) return [];
+
+        let result = [];
+
+        parsed.scenes.forEach(scene => {
+            scene.segments.forEach(seg => {
+                let blocks = seg.blocks;
+                for (let i = 0; i < blocks.length; i++) {
+                    let blk = blocks[i];
+                    if (blk.role !== canonical) continue;
+
+                    let prevBlk = i > 0 ? blocks[i - 1] : null;
+                    let nextBlk = i < blocks.length - 1 ? blocks[i + 1] : null;
+
+                    let stavka = {
+                        scena: scene.title,
+                        pozicijaUTekstu: blk.positionInScene,
+                        prethodni: prevBlk
+                            ? {
+                                uloga: prevBlk.role,
+                                linije: prevBlk.speechLines.join("\n")
+                            }
+                            : null,
+                        trenutni: {
+                            uloga: blk.role,
+                            linije: blk.speechLines.join("\n")
+                        },
+                        sljedeci: nextBlk
+                            ? {
+                                uloga: nextBlk.role,
+                                linije: nextBlk.speechLines.join("\n")
+                            }
+                            : null
+                    };
+
+                    result.push(stavka);
+                }
+            });
+        });
+
+        return result;
+    };
 }
