@@ -512,6 +512,36 @@ let EditorTeksta = function (divRef) {
                 }
             });
         });
+        return result;
+    };
+
+    let grupisiUloge = function () {
+        let parsed = parseScript();
+        let result = [];
+
+        parsed.scenes.forEach(scene => {
+            if (!scene.segments || scene.segments.length === 0) return;
+
+            scene.segments.forEach(seg => {
+                if (!seg.blocks || seg.blocks.length === 0) return;
+
+                let seen = {};
+                let uloge = [];
+
+                seg.blocks.forEach(blk => {
+                    if (!seen[blk.role]) {
+                        seen[blk.role] = true;
+                        uloge.push(blk.role);
+                    }
+                });
+
+                result.push({
+                    scena: scene.title,
+                    segment: seg.index,
+                    uloge: uloge
+                });
+            });
+        });
 
         return result;
     };
