@@ -571,4 +571,14 @@ let EditorTeksta = function (divRef) {
         document.execCommand(map[komanda], false, null);
         return true;
     };
+
+    return {
+        dajBrojRijeci: dajBrojRijeci,
+        dajUloge: dajUloge,
+        pogresnaUloga: pogresnaUloga,
+        brojLinijaTeksta: brojLinijaTeksta,
+        scenarijUloge: scenarijUloge,
+        grupisiUloge: grupisiUloge,
+        formatirajTekst: formatirajTekst
+    };
 }
