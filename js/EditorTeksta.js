@@ -52,7 +52,7 @@ let EditorTeksta = function (divRef) {
         let t = line.trim();
         if (!t) return false;
         if (t !== t.toUpperCase()) return false;
-        let regex = /^(INT\.|EXT\.)\s+.+-\s+(DAY|NIGHT|AFTERNOON|MORNING|EVENING)\s*$/;
+        let regex = /^(INT\.|EXT\.)\s+.*-\s+(DAY|NIGHT|AFTERNOON|MORNING|EVENING)\s*$/;
         return regex.test(t);
     }
 
@@ -557,14 +557,12 @@ let EditorTeksta = function (divRef) {
 
     let formatirajTekst = function (komanda) {
         let selection = window.getSelection();
-        if (!selection || selection.rangeCount === 0) return false;
-        if (selection.isCollapsed) return false;
+        if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return false;
 
         let range = selection.getRangeAt(0);
 
         if (
-            !isDescendant(selection.anchorNode, divRef) ||
-            !isDescendant(selection.focusNode, divRef)
+            !isDescendant(range.commonAncestorContainer, divRef)
         ) {
             return false;
         }
