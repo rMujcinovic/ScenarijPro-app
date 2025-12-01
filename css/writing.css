@@ -2,10 +2,10 @@
     --page-bg: #f5f6fa;
     --text: #333;
     --muted: #6b7280;
-    --chip-bg: #eaecef;     /* siva pozadina za buttons */
-    --chip-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);       /* shadow */
-    --save: #28a745;     /* zelena za 'SPASI' button */
-    --save-hover: #218838;      /* hover zelena za 'SPASI' button */
+    --chip-bg: #eaecef;
+    --chip-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    --save: #28a745;
+    --save-hover: #218838;
     --sidebar-w: 250px;
     --radius: 12px;
     --accent: #5b3fff;
@@ -16,8 +16,7 @@
     box-sizing: border-box;
 }
 
-html,
-body {
+html, body {
     height: 100%;
 }
 
@@ -111,10 +110,6 @@ body {
     gap: 8px;
 }
 
-.save-btn-icon {
-    display: inline-flex;
-}
-
 .save-btn-icon svg {
     width: 16px;
     height: 16px;
@@ -137,10 +132,6 @@ body {
     border-radius: var(--radius);
     padding: 14px;
     height: fit-content;
-}
-
-.scenes-header {
-    margin-bottom: 10px;
 }
 
 .scenes-header h2 {
@@ -168,26 +159,6 @@ body {
     background: #fff;
 }
 
-.scene-item .scene-main {
-    display: flex;
-    gap: 8px;
-    align-items: baseline;
-}
-
-.scene-num {
-    font-weight: 700;
-}
-
-.scene-title {
-    font-weight: 600;
-}
-
-.scene-pages {
-    color: var(--muted);
-    font-size: 12px;
-    margin-top: 4px;
-}
-
 .scene-item.active {
     background: var(--active-fill);
     border-left: 6px solid var(--accent);
@@ -195,46 +166,138 @@ body {
 }
 
 .editor-wrap {
-  min-width: 0;
+    min-width: 0;
 }
 
 .paper {
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-  padding: 48px 64px;
-  border: 1px solid #eef1f6;
-  font-family: "Courier Prime", "Courier New", monospace;
-  line-height: 1.65;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    padding: 48px 64px;
+    border: 1px solid #eef1f6;
+    font-family: "Courier Prime", "Courier New", monospace;
+    line-height: 1.65;
 }
 
 .paper p {
-  margin: 1.5em 0;
+    margin: 1.5em 0;
 }
 
 .scene-heading {
-  color: #d68a00;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin: 0 0 1.5em 0;
-  font-weight: 700;
-  text-align: left;
+    color: #d68a00;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 1.5em 0;
+    font-weight: 700;
+    text-align: left;
+}
+
+
+.editor-tools {
+    padding: 8px 16px 0 16px;
+    background: var(--page-bg);
+}
+
+.editor-tools-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.editor-tools-row button,
+.editor-tools-row input {
+    font-family: "Poppins", "Inter", sans-serif;
+    font-size: 13px;
+}
+
+.editor-tools-row button {
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid #dde1ea;
+    background: #ffffff;
+    cursor: pointer;
+    transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.editor-tools-row button:hover {
+    background: #f4f5f8;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.editor-tools-row input {
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid #dde1ea;
+    min-width: 180px;
+}
+
+
+.editor-format-row {
+    display: flex;
+    gap: 6px;
+    padding-bottom: 8px;
+}
+
+.editor-format-row button {
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    border: 1px solid #dde1ea;
+    background: #ffffff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+}
+
+.editor-format-row button:hover {
+    background: #f4f5f8;
+}
+
+
+#poruke {
+    margin: 8px 16px 0 16px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid #dde1ea;
+    background: #ffffff;
+    font-size: 13px;
+    color: var(--muted);
+    white-space: pre-wrap;
+}
+
+.editor-content {
+    min-height: 400px;
+    outline: none;
+}
+
+.editor-content p {
+    margin: 1.5em 0;
 }
 
 @media (max-width: 750px) {
-  .layout {
-    grid-template-columns: 1fr;
-  }
-
-  .scenes {
-    order: -1;
-  }
-
-  .project-title {
-    font-size: 15px;
-  }
-
-  .paper {
-    padding: 28px 18px;
-  }
+    .layout {
+        grid-template-columns: 1fr;
+    }
+    .scenes {
+        order: -1;
+    }
+    .project-title {
+        font-size: 15px;
+    }
+    .paper {
+        padding: 28px 18px;
+    }
+    .editor-tools {
+        padding: 8px;
+    }
+    .editor-tools-row input {
+        min-width: 140px;
+    }
+    #poruke {
+        margin: 8px;
+    }
 }
