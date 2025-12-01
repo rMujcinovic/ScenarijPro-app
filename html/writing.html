@@ -1,108 +1,130 @@
 <!DOCTYPE html>
 <html lang="bs">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ScenarijPro — Pisanje</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@400;600;700&family=Courier+Prime:wght@400;700&display=swap"
-      rel="stylesheet"
-    >
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ScenarijPro — Pisanje</title>
 
-    <link rel="stylesheet" href="writing.css">
-  </head>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@400;600;700&family=Courier+Prime:wght@400;700&display=swap"
+    rel="stylesheet">
 
-  <body>
-    <header class="topbar">
-      <div class="left">
-        <button class="icon-btn" aria-label="Nazad">
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden="true"
-          >
-            <path
-              d="M15 18l-6-6 6-6"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            ></path>
+  <link rel="stylesheet" href="writing.css">
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="left">
+      <button class="icon-btn" aria-label="Nazad">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round"></path>
+        </svg>
+      </button>
+      <h1 class="project-title">THE LAST STARSHIP (Draft 2)</h1>
+    </div>
+
+    <div class="toolbar" role="group" aria-label="Umetanje formata">
+      <button class="chip">SCENA</button>
+      <button class="chip">AKCIJA</button>
+      <button class="chip">LIK</button>
+      <button class="chip">DIJALOG</button>
+    </div>
+    <div class="right">
+      <button class="save-btn" type="button">
+        <span class="save-btn-icon" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M12.5 4.5l-5 7-3-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+              stroke-linejoin="round"></path>
           </svg>
-        </button>
-        <h1 class="project-title">THE LAST STARSHIP (Draft 2)</h1>
+        </span>
+        <span class="save-label">SPASI</span>
+      </button>
+    </div>
+  </header>
+
+  <section class="editor-tools" aria-label="Alati editora">
+    <div class="editor-tools-row">
+      <button id="btnBrojRijeci" type="button">Broj riječi</button>
+      <button id="btnUloge" type="button">Uloge</button>
+      <button id="btnPogresneUloge" type="button">Pogrešne uloge</button>
+
+      <input id="inputUlogaLinije" type="text" placeholder="ULOGA za broj linija" />
+      <button id="btnBrojLinija" type="button">Broj linija</button>
+
+      <input id="inputUlogaScenarij" type="text" placeholder="ULOGA za scenarij" />
+      <button id="btnScenarijUloge" type="button">Scenarij uloge</button>
+
+      <button id="btnGrupeUloga" type="button">Grupiši uloge</button>
+    </div>
+
+    <div class="editor-format-row">
+      <button id="btnBold" type="button"><strong>B</strong></button>
+      <button id="btnItalic" type="button"><em>I</em></button>
+      <button id="btnUnderline" type="button">
+        <span style="text-decoration: underline">U</span>
+      </button>
+    </div>
+  </section>
+
+  <div id="poruke" class="poruke"></div>
+
+  <div class="layout">
+    <aside class="scenes">
+      <div class="scenes-header">
+        <h2>Scene <span class="count">(12)</span></h2>
       </div>
 
-      <div class="toolbar" role="group" aria-label="Umetanje formata">
-        <button class="chip">SCENA</button>
-        <button class="chip">AKCIJA</button>
-        <button class="chip">LIK</button>
-        <button class="chip">DIJALOG</button>
-      </div>
-      <div class="right">
-        <button class="save-btn" type="button">
-          <span class="save-btn-icon" aria-hidden="true">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M12.5 4.5l-5 7-3-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
-            </svg>
-          </span>
-          <span class="save-label">SPASI</span>
-        </button>
-      </div>
-    </header>
+      <ol class="scene-list">
+        <li class="scene-item active">
+          <div class="scene-main">
+            <span class="scene-num">1.</span>
+            <span class="scene-title">INT. STARSHIP BRIDGE - NIGHT</span>
+          </div>
+          <div class="scene-pages">(5/8)</div>
+        </li>
+        <li class="scene-item">
+          <div class="scene-main">
+            <span class="scene-num">2.</span>
+            <span class="scene-title">EXT. ASTEROID FIELD - DAY</span>
+          </div>
+          <div class="scene-pages">(3/8)</div>
+        </li>
+        <li class="scene-item">
+          <div class="scene-main">
+            <span class="scene-num">3.</span>
+            <span class="scene-title">INT. ENGINE ROOM - NIGHT</span>
+          </div>
+          <div class="scene-pages">(2/8)</div>
+        </li>
+      </ol>
+    </aside>
 
-    <div class="layout">
-      <aside class="scenes">
-        <div class="scenes-header">
-          <h2>Scene <span class="count">(12)</span></h2>
-        </div>
-
-        <ol class="scene-list">
-          <li class="scene-item active">
-            <div class="scene-main">
-              <span class="scene-num">1.</span>
-              <span class="scene-title">INT. STARSHIP BRIDGE - NIGHT</span>
-            </div>
-            <div class="scene-pages">(5/8)</div>
-          </li>
-          <li class="scene-item">
-            <div class="scene-main">
-              <span class="scene-num">2.</span>
-              <span class="scene-title">EXT. ASTEROID FIELD - DAY</span>
-            </div>
-            <div class="scene-pages">(3/8)</div>
-          </li>
-          <li class="scene-item">
-            <div class="scene-main">
-              <span class="scene-num">3.</span>
-              <span class="scene-title">INT. ENGINE ROOM - NIGHT</span>
-            </div>
-            <div class="scene-pages">(2/8)</div>
-          </li>
-        </ol>
-      </aside>
-
-      <main class="editor-wrap">
-        <article class="paper">
+    <main class="editor-wrap">
+      <article class="paper">
+        <div id="divEditor" contenteditable="true" class="editor-content">
           <h3 class="scene-heading">EXT. LUNAR SURFACE – DAY</h3>
 
           <p>
-            The vast, grey SILENCE of the moon. Dust motes hang impossibly still
-            in the weak light. CAPTAIN KIRA (40s, sharp, tired) walks toward a
-            ruined DOME, her footsteps crunching.
+            The vast, grey SILENCE of the moon. Dust motes hang impossibly
+            still in the weak light. CAPTAIN KIRA (40s, sharp, tired) walks
+            toward a ruined DOME, her footsteps crunching.
           </p>
 
           <p>
             She pauses, looking up at the Earth suspended above the horizon —
             distant, blue, fragile.
           </p>
-        </article>
-      </main>
-    </div>
-  </body>
+        </div>
+      </article>
+    </main>
+  </div>
+
+  <script src="EditorTeksta.js"></script>
+  <script src="editor.js"></script>
+</body>
+
 </html>
