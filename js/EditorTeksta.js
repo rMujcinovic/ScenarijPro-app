@@ -77,6 +77,15 @@ let EditorTeksta = function (divRef) {
         return true;
     }
 
+    function isDescendant(node, ancestor) {
+        while (node) {
+            if (node === ancestor) return true;
+            node = node.parentNode;
+        }
+        return false;
+    }
+
+
     // tree walker prolazi kroz DOM cvor po cvor po filteru (u ovom slucaju text)
     let dajBrojRijeci = function () {
         let walker = document.createTreeWalker(
