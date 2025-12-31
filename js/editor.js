@@ -178,7 +178,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function saveDraft() {
     try {
       localStorage.setItem(draftKey, div.innerText ?? "");
-    } catch {}
+    } catch { }
   }
 
   function loadDraft() {
@@ -192,7 +192,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function clearDraft() {
     try {
       localStorage.removeItem(draftKey);
-    } catch {}
+    } catch { }
   }
 
   let since = 0;
@@ -242,11 +242,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const btnSave = document.querySelector(".save-btn");
   if (btnSave) {
     btnSave.addEventListener("click", function () {
-      const lineIdStr = prompt("Unesi lineId koji mijenjaš (npr. 1):", "1");
-      if (!lineIdStr) return;
-
-      const lineId = parseInt(lineIdStr, 10);
-      if (!Number.isFinite(lineId)) return;
+      const lineId = 1;
 
       const original = div.innerText ?? "";
       const normalized = normalizeRoles(original);
