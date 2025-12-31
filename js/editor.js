@@ -1,8 +1,24 @@
-// editor.js
-
 document.addEventListener("DOMContentLoaded", function () {
-  let div = document.getElementById("divEditor");
-  let poruke = document.getElementById("poruke");
+  const div = document.getElementById("divEditor");
+  const poruke = document.getElementById("poruke");
+
+  function ispisiPoruku(msg) {
+    if (poruke) {
+      poruke.textContent =
+        typeof msg === "string" ? msg : JSON.stringify(msg, null, 2);
+    } else {
+      console.log(msg);
+    }
+  }
+
+  function formatResult(label, value) {
+    if (value === undefined) return `${label}: (nema rezultata)`;
+    if (value === null) return `${label}: null`;
+    if (typeof value === "string") return `${label}: ${value}`;
+    if (typeof value === "number") return `${label}: ${value}`;
+    if (typeof value === "boolean") return `${label}: ${value ? "DA" : "NE"}`;
+    return { [label]: value };
+  }
 
   if (!div) {
     console.error("Nije pronađen divEditor");
@@ -13,80 +29,88 @@ document.addEventListener("DOMContentLoaded", function () {
   try {
     editor = EditorTeksta(div);
   } catch (e) {
-    console.error(e.message);
-    if (poruke) poruke.textContent = e.message;
+    ispisiPoruku(e.message);
     return;
   }
 
-  function ispisiPoruku(msg) {
-    if (poruke) {
-      poruke.textContent = typeof msg === "string" ? msg : JSON.stringify(msg, null, 2);
-    } else {
-      console.log(msg);
-    }
-  }
-
-  // --- dugmad za brojanje riječi ---
   let btnBrojRijeci = document.getElementById("btnBrojRijeci");
   if (btnBrojRijeci) {
     btnBrojRijeci.addEventListener("click", function () {
       let rez = editor.dajBrojRijeci();
-      ispisiPoruku(
-        `Ukupno: ${rez.ukupno}, boldiranih: ${rez.boldiranih}, italic: ${rez.italic}`
-      );
+
+      if (rez && typeof rez === "object" && "ukupno" in rez) {
+        ispisiPoruku(
+          `Ukupno riječi: ${rez.ukupno}, boldiranih: ${rez.boldiranih}, italic: ${rez.italic}`
+        );
+      } else {
+        ispisiPoruku(formatResult("Broj riječi", rez));
+      }
     });
   }
 
-  // --- dugme za dajUloge ---
   let btnUloge = document.getElementById("btnUloge");
   if (btnUloge) {
     btnUloge.addEventListener("click", function () {
       let uloge = editor.dajUloge();
-      ispisiPoruku(uloge);
+      ispisiPoruku(formatResult("Uloge", uloge));
     });
   }
 
-  // --- dugme za pogresnaUloga ---
   let btnPogresne = document.getElementById("btnPogresneUloge");
   if (btnPogresne) {
     btnPogresne.addEventListener("click", function () {
       let sumnjive = editor.pogresnaUloga();
-      ispisiPoruku(sumnjive);
+
+      if (Array.isArray(sumnjive)) {
+        if (sumnjive.length === 0) {
+          ispisiPoruku("Nema potencijalno pogrešno napisanih uloga.");
+        } else {
+          ispisiPoruku("Potencijalno pogrešne uloge:\n- " + sumnjive.join("\n- "));
+        }
+      } else {
+        ispisiPoruku(formatResult("Pogrešne uloge", sumnjive));
+      }
     });
   }
 
-  // --- brojLinijaTeksta(uloga) ---
   let btnBrojLinija = document.getElementById("btnBrojLinija");
   let inputUlogaLinije = document.getElementById("inputUlogaLinije");
   if (btnBrojLinija && inputUlogaLinije) {
     btnBrojLinija.addEventListener("click", function () {
-      let uloga = inputUlogaLinije.value || "";
+      let uloga = (inputUlogaLinije.value || "").trim();
+      if (!uloga) {
+        ispisiPoruku('Unesi ulogu za broj linija (npr. ALICE).');
+        return;
+      }
+
       let br = editor.brojLinijaTeksta(uloga);
-      ispisiPoruku(`Uloga ${uloga} ima ukupno ${br} linija teksta.`);
+      ispisiPoruku(`Broj linija teksta za ulogu "${uloga}": ${br}`);
     });
   }
 
-  // --- scenarijUloge(uloga) ---
   let btnScenarijUloge = document.getElementById("btnScenarijUloge");
   let inputUlogaScenarij = document.getElementById("inputUlogaScenarij");
   if (btnScenarijUloge && inputUlogaScenarij) {
     btnScenarijUloge.addEventListener("click", function () {
-      let uloga = inputUlogaScenarij.value || "";
+      let uloga = (inputUlogaScenarij.value || "").trim();
+      if (!uloga) {
+        ispisiPoruku('Unesi ulogu za scenarij (npr. ALICE).');
+        return;
+      }
+
       let rez = editor.scenarijUloge(uloga);
-      ispisiPoruku(rez);
+      ispisiPoruku(formatResult(`Scenarij uloge (${uloga})`, rez));
     });
   }
 
-  // --- grupisiUloge() ---
   let btnGrupe = document.getElementById("btnGrupeUloga");
   if (btnGrupe) {
     btnGrupe.addEventListener("click", function () {
       let rez = editor.grupisiUloge();
-      ispisiPoruku(rez);
+      ispisiPoruku(formatResult("Grupe uloga", rez));
     });
   }
 
-  // --- formatirajTekst("bold" | "italic" | "underline") ---
   let btnBold = document.getElementById("btnBold");
   if (btnBold) {
     btnBold.addEventListener("click", function () {
