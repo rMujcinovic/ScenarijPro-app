@@ -30,8 +30,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     for (const line of lines) {
       const t = line.trim();
-
       const m = /^([A-ZČĆŠĐŽ]+(?: [A-ZČĆŠĐŽ]+)*):\s*(.*)$/.exec(t);
+
       if (m) {
         const role = m[1].trim();
         const rest = m[2] ?? "";
@@ -60,7 +60,6 @@ document.addEventListener("DOMContentLoaded", function () {
   if (btnBrojRijeci) {
     btnBrojRijeci.addEventListener("click", function () {
       const rez = withNormalizedDomText(() => editor.dajBrojRijeci());
-      // očekivani format iz EditorTeksta
       if (rez && typeof rez === "object" && "ukupno" in rez) {
         ispisiPoruku(
           `Ukupno: ${rez.ukupno}, boldiranih: ${rez.boldiranih}, italic: ${rez.italic}`
@@ -155,4 +154,149 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!ok) ispisiPoruku("Nema validne selekcije za underline.");
     });
   }
+
+  if (typeof PoziviAjaxFetch === "undefined") {
+    console.warn("PoziviAjaxFetch nije učitan.");
+    return;
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const scenarioId = parseInt(
+    params.get("scenarioId") || localStorage.getItem("scenarioId") || "1",
+    10
+  );
+  const userId = parseInt(
+    params.get("userId") || localStorage.getItem("userId") || "1",
+    10
+  );
+
+  localStorage.setItem("scenarioId", String(scenarioId));
+  localStorage.setItem("userId", String(userId));
+
+  const draftKey = `draft:${scenarioId}`;
+
+  function saveDraft() {
+    try {
+      localStorage.setItem(draftKey, div.innerText ?? "");
+    } catch {}
+  }
+
+  function loadDraft() {
+    try {
+      return localStorage.getItem(draftKey);
+    } catch {
+      return null;
+    }
+  }
+
+  function clearDraft() {
+    try {
+      localStorage.removeItem(draftKey);
+    } catch {}
+  }
+
+  let since = 0;
+
+  function renderScenario(sc) {
+    const text = (sc.content || []).map((l) => l.text ?? "").join("\n");
+    div.setAttribute("contenteditable", "true");
+    div.style.whiteSpace = "pre-wrap";
+    div.textContent = text;
+  }
+
+  function loadScenario() {
+    PoziviAjaxFetch.getScenario(scenarioId, (status, data) => {
+      if (status !== 200) {
+        ispisiPoruku(data?.message || "Greška pri učitavanju scenarija.");
+        return;
+      }
+
+      const currentDraft = loadDraft();
+      if (currentDraft !== null && currentDraft.trim().length > 0) {
+        ispisiPoruku(
+          `Učitan scenarij #${data.id}: ${data.title} (server OK). Imaš lokalni draft koji nije poslan.`
+        );
+      } else {
+        renderScenario(data);
+        ispisiPoruku(`Učitan scenarij #${data.id}: ${data.title}`);
+      }
+    });
+  }
+
+  div.addEventListener("input", () => {
+    saveDraft();
+  });
+
+  const draft = loadDraft();
+  if (draft !== null && draft.trim().length > 0) {
+    div.setAttribute("contenteditable", "true");
+    div.style.whiteSpace = "pre-wrap";
+    div.textContent = draft;
+    ispisiPoruku(
+      "Vraćen lokalni draft (nesačuvane izmjene). Klikni SPASI da ih pošalješ na server."
+    );
+  }
+
+  loadScenario();
+
+  const btnSave = document.querySelector(".save-btn");
+  if (btnSave) {
+    btnSave.addEventListener("click", function () {
+      const lineIdStr = prompt("Unesi lineId koji mijenjaš (npr. 1):", "1");
+      if (!lineIdStr) return;
+
+      const lineId = parseInt(lineIdStr, 10);
+      if (!Number.isFinite(lineId)) return;
+
+      const original = div.innerText ?? "";
+      const normalized = normalizeRoles(original);
+      const newTextArr = normalized.split(/\r?\n/);
+
+      const hasAnyNonEmpty = newTextArr.some((l) => l.trim().length > 0);
+      if (!hasAnyNonEmpty) {
+        ispisiPoruku("Ne možeš spasiti potpuno prazan sadržaj.");
+        return;
+      }
+
+      PoziviAjaxFetch.lockLine(scenarioId, lineId, userId, (s1, r1) => {
+        if (s1 !== 200) {
+          ispisiPoruku(r1?.message || "Ne mogu zaključati liniju.");
+          return;
+        }
+
+        PoziviAjaxFetch.updateLine(
+          scenarioId,
+          lineId,
+          userId,
+          newTextArr,
+          (s2, r2) => {
+            if (s2 === 200) {
+              clearDraft();
+              ispisiPoruku(r2?.message || "Linija je uspješno ažurirana!");
+              loadScenario();
+            } else {
+              ispisiPoruku(r2?.message || "Greška pri spremanju.");
+            }
+          }
+        );
+      });
+    });
+  }
+
+  setInterval(() => {
+    PoziviAjaxFetch.getDeltas(scenarioId, since, (status, data) => {
+      if (status !== 200) return;
+
+      const deltas = data?.deltas || [];
+      if (deltas.length === 0) return;
+
+      for (const d of deltas) {
+        if (typeof d.timestamp === "number") {
+          since = Math.max(since, d.timestamp);
+        }
+      }
+
+      loadScenario();
+    });
+  }, 2000);
 });
