@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
       localStorage.setItem("scenarioId", String(data.id));
-      window.location.href = `pisanje.html?scenarioId=${data.id}&userId=${userId}`;
+      window.location.href = `writing.html?scenarioId=${data.id}&userId=${userId}`;
     });
   });
 });
