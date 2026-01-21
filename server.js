@@ -5,6 +5,9 @@ const path = require("path");
 const app = express();
 app.use(express.json());
 
+const { sequelize } = require("./db");
+require("./models"); // da se modeli i relacije registruju
+
 // frontend povezivanje
 app.use(express.static(__dirname));
 
@@ -410,7 +413,17 @@ app.get("/api/scenarios/:scenarioId", async (req, res) => {
   }
 });
 
-ensureDataLayout().then(() => {
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => console.log(`API listening on :${PORT}`));
-});
+(async () => {
+  try {
+    await sequelize.authenticate();
+    await sequelize.sync({ force: true });
+
+    await ensureDataLayout();
+
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => console.log(`API listening on :${PORT}`));
+  } catch (err) {
+    console.error("Init error:", err);
+    process.exit(1);
+  }
+})();
