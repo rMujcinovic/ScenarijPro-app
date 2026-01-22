@@ -7,10 +7,15 @@ document.addEventListener("DOMContentLoaded", function () {
     return;
   }
 
-  function ispisiPoruku(msg) {
+  function ispisiPoruku(msg, type = "") {
     if (poruke) {
-      poruke.textContent =
-        typeof msg === "string" ? msg : JSON.stringify(msg, null, 2);
+      poruke.textContent = typeof msg === "string" ? msg : JSON.stringify(msg, null, 2);
+      
+      poruke.className = "poruke";
+      
+      if (type) {
+        poruke.classList.add(type);
+      }
     } else {
       console.log(msg);
     }
@@ -20,7 +25,7 @@ document.addEventListener("DOMContentLoaded", function () {
   try {
     editor = EditorTeksta(div);
   } catch (e) {
-    ispisiPoruku(e.message);
+    ispisiPoruku(e.message, "error");
     return;
   }
 
@@ -62,7 +67,8 @@ document.addEventListener("DOMContentLoaded", function () {
       const rez = withNormalizedDomText(() => editor.dajBrojRijeci());
       if (rez && typeof rez === "object" && "ukupno" in rez) {
         ispisiPoruku(
-          `Ukupno: ${rez.ukupno}, boldiranih: ${rez.boldiranih}, italic: ${rez.italic}`
+          `Ukupno: ${rez.ukupno}, boldiranih: ${rez.boldiranih}, italic: ${rez.italic}`,
+          "success"
         );
       } else {
         ispisiPoruku(rez);
@@ -85,9 +91,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (Array.isArray(r)) {
         if (r.length === 0) {
-          ispisiPoruku("Nema potencijalno pogrešno napisanih uloga.");
+          ispisiPoruku("Nema potencijalno pogrešno napisanih uloga.", "success");
         } else {
-          ispisiPoruku("Potencijalno pogrešne uloge:\n- " + r.join("\n- "));
+          ispisiPoruku("Potencijalno pogrešne uloge:\n- " + r.join("\n- "), "warning");
         }
       } else {
         ispisiPoruku(r);
@@ -101,7 +107,7 @@ document.addEventListener("DOMContentLoaded", function () {
     btnBrojLinija.addEventListener("click", function () {
       let uloga = (inputUlogaLinije.value || "").trim();
       if (!uloga) {
-        ispisiPoruku("Unesi ulogu za broj linija (npr. ALICE).");
+        ispisiPoruku("Unesi ulogu za broj linija (npr. ALICE).", "warning");
         return;
       }
       const br = withNormalizedDomText(() => editor.brojLinijaTeksta(uloga));
@@ -115,7 +121,7 @@ document.addEventListener("DOMContentLoaded", function () {
     btnScenarijUloge.addEventListener("click", function () {
       let uloga = (inputUlogaScenarij.value || "").trim();
       if (!uloga) {
-        ispisiPoruku("Unesi ulogu za scenarij (npr. ALICE).");
+        ispisiPoruku("Unesi ulogu za scenarij (npr. ALICE).", "warning");
         return;
       }
       const rez = withNormalizedDomText(() => editor.scenarijUloge(uloga));
@@ -135,7 +141,7 @@ document.addEventListener("DOMContentLoaded", function () {
   if (btnBold) {
     btnBold.addEventListener("click", function () {
       let ok = editor.formatirajTekst("bold");
-      if (!ok) ispisiPoruku("Nema validne selekcije za bold.");
+      if (!ok) ispisiPoruku("Nema validne selekcije za bold.", "warning");
     });
   }
 
@@ -143,7 +149,7 @@ document.addEventListener("DOMContentLoaded", function () {
   if (btnItalic) {
     btnItalic.addEventListener("click", function () {
       let ok = editor.formatirajTekst("italic");
-      if (!ok) ispisiPoruku("Nema validne selekcije za italic.");
+      if (!ok) ispisiPoruku("Nema validne selekcije za italic.", "warning");
     });
   }
 
@@ -151,9 +157,10 @@ document.addEventListener("DOMContentLoaded", function () {
   if (btnUnderline) {
     btnUnderline.addEventListener("click", function () {
       let ok = editor.formatirajTekst("underline");
-      if (!ok) ispisiPoruku("Nema validne selekcije za underline.");
+      if (!ok) ispisiPoruku("Nema validne selekcije za underline.", "warning");
     });
   }
+
 
   if (typeof PoziviAjaxFetch === "undefined") {
     console.warn("PoziviAjaxFetch nije učitan.");
@@ -170,10 +177,19 @@ document.addEventListener("DOMContentLoaded", function () {
     10
   );
 
-  localStorage.setItem("scenarioId", String(scenarioId));
-  localStorage.setItem("userId", String(userId));
+  if (params.get("scenarioId")) {
+    localStorage.setItem("scenarioId", String(scenarioId));
+  }
+  if (params.get("userId")) {
+    localStorage.setItem("userId", String(userId));
+  }
 
-  const draftKey = `draft:${scenarioId}`;
+  const topbarTitle = document.querySelector(".project-title");
+  if (topbarTitle) {
+    topbarTitle.textContent = `📝 Scenario #${scenarioId} | 👤 User #${userId}`;
+  }
+
+  const draftKey = `draft:${scenarioId}:${userId}`;
 
   function saveDraft() {
     try {
@@ -196,6 +212,8 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   let since = 0;
+  let isLoadingScenario = false;
+  let isLineLocked = false;
 
   function renderScenario(sc) {
     const text = (sc.content || []).map((l) => l.text ?? "").join("\n");
@@ -205,20 +223,26 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function loadScenario() {
+    if (isLoadingScenario) return;
+    isLoadingScenario = true;
+
     PoziviAjaxFetch.getScenario(scenarioId, (status, data) => {
+      isLoadingScenario = false;
+
       if (status !== 200) {
-        ispisiPoruku(data?.message || "Greška pri učitavanju scenarija.");
+        ispisiPoruku("❌ " + (data?.message || "Greška pri učitavanju scenarija."), "error");
         return;
       }
 
       const currentDraft = loadDraft();
       if (currentDraft !== null && currentDraft.trim().length > 0) {
         ispisiPoruku(
-          `Učitan scenarij #${data.id}: ${data.title} (server OK). Imaš lokalni draft koji nije poslan.`
+          `✅ Scenarij #${data.id}: "${data.title}". Imaš draft koji nije poslan.`,
+          "warning"
         );
       } else {
         renderScenario(data);
-        ispisiPoruku(`Učitan scenarij #${data.id}: ${data.title}`);
+        ispisiPoruku(`✅ Učitan scenarij #${data.id}: "${data.title}"`, "success");
       }
     });
   }
@@ -233,16 +257,46 @@ document.addEventListener("DOMContentLoaded", function () {
     div.style.whiteSpace = "pre-wrap";
     div.textContent = draft;
     ispisiPoruku(
-      "Vraćen lokalni draft (nesačuvane izmjene). Klikni SPASI da ih pošalješ na server."
+      "⚠️ Vraćen lokalni draft. Klikni 🔒 LOCK LINE pa SPASI.",
+      "warning"
     );
+  } else {
+    loadScenario();
   }
 
-  loadScenario();
+  const btnLockLine = document.getElementById("btnLockLine");
+  if (btnLockLine) {
+    btnLockLine.addEventListener("click", function () {
+      const lineId = 1;
+
+      ispisiPoruku(`🔒 Pokušavam zaključati liniju ${lineId}...`, "info");
+
+      PoziviAjaxFetch.lockLine(scenarioId, lineId, userId, (status, data) => {
+        if (status === 200) {
+          ispisiPoruku(`✅ ${data?.message || "Linija uspješno zaključana!"}`, "success");
+          isLineLocked = true;
+          btnLockLine.disabled = true;
+          btnLockLine.textContent = "🔒 LOCKED";
+        } else if (status === 409) {
+          ispisiPoruku(`❌ KONFLIKT: ${data?.message || "Linija već zaključana!"}`, "error");
+        } else if (status === 404) {
+          ispisiPoruku(`❌ ${data?.message || "Linija ne postoji!"}`, "error");
+        } else {
+          ispisiPoruku(`❌ Greška: ${data?.message || "Nepoznata greška"}`, "error");
+        }
+      });
+    });
+  }
 
   const btnSave = document.querySelector(".save-btn");
   if (btnSave) {
     btnSave.addEventListener("click", function () {
       const lineId = 1;
+
+      if (!isLineLocked) {
+        ispisiPoruku("⚠️ Moraš prvo ZAKLJUČATI liniju!", "warning");
+        return;
+      }
 
       const original = div.innerText ?? "";
       const normalized = normalizeRoles(original);
@@ -250,31 +304,113 @@ document.addEventListener("DOMContentLoaded", function () {
 
       const hasAnyNonEmpty = newTextArr.some((l) => l.trim().length > 0);
       if (!hasAnyNonEmpty) {
-        ispisiPoruku("Ne možeš spasiti potpuno prazan sadržaj.");
+        ispisiPoruku("❌ Ne možeš spasiti prazan sadržaj.", "error");
         return;
       }
 
-      PoziviAjaxFetch.lockLine(scenarioId, lineId, userId, (s1, r1) => {
-        if (s1 !== 200) {
-          ispisiPoruku(r1?.message || "Ne mogu zaključati liniju.");
-          return;
-        }
+      ispisiPoruku("💾 Šaljem izmjene...", "info");
 
-        PoziviAjaxFetch.updateLine(
-          scenarioId,
-          lineId,
-          userId,
-          newTextArr,
-          (s2, r2) => {
-            if (s2 === 200) {
-              clearDraft();
-              ispisiPoruku(r2?.message || "Linija je uspješno ažurirana!");
-              loadScenario();
-            } else {
-              ispisiPoruku(r2?.message || "Greška pri spremanju.");
+      PoziviAjaxFetch.updateLine(
+        scenarioId,
+        lineId,
+        userId,
+        newTextArr,
+        (status, data) => {
+          if (status === 200) {
+            clearDraft();
+            ispisiPoruku(`✅ ${data?.message || "Linija ažurirana!"}`, "success");
+            isLineLocked = false;
+            if (btnLockLine) {
+              btnLockLine.disabled = false;
+              btnLockLine.textContent = "🔒 LOCK LINE #1";
             }
+            
+            setTimeout(() => loadScenario(), 500);
+          } else if (status === 409) {
+            ispisiPoruku(`❌ KONFLIKT: ${data?.message}`, "error");
+          } else if (status === 404) {
+            ispisiPoruku(`❌ ${data?.message}`, "error");
+          } else if (status === 400) {
+            ispisiPoruku(`❌ ${data?.message}`, "error");
+          } else {
+            ispisiPoruku(`❌ Greška: ${data?.message}`, "error");
           }
-        );
+        }
+      );
+    });
+  }
+
+  const charNameInput = document.getElementById("charNameInput");
+  const btnLockChar = document.getElementById("btnLockChar");
+  const charOldName = document.getElementById("charOldName");
+  const charNewName = document.getElementById("charNewName");
+  const btnUpdateChar = document.getElementById("btnUpdateChar");
+
+  let currentCharLock = null;
+
+  if (btnLockChar) {
+    btnLockChar.addEventListener("click", () => {
+      const charName = (charNameInput.value || "").trim().toUpperCase();
+      if (!charName) {
+        ispisiPoruku("❌ Unesi ime lika!", "warning");
+        return;
+      }
+
+      ispisiPoruku(`🔒 Zaključavam: ${charName}...`, "info");
+
+      PoziviAjaxFetch.lockCharacter(scenarioId, charName, userId, (status, data) => {
+        if (status === 200) {
+          ispisiPoruku(`✅ ${data?.message}`, "success");
+          currentCharLock = charName;
+          btnUpdateChar.disabled = false;
+          charOldName.value = charName;
+          btnLockChar.disabled = true;
+        } else if (status === 409) {
+          ispisiPoruku(`❌ KONFLIKT: ${data?.message}`, "error");
+        } else if (status === 404) {
+          ispisiPoruku(`❌ ${data?.message}`, "error");
+        } else {
+          ispisiPoruku(`❌ ${data?.message}`, "error");
+        }
+      });
+    });
+  }
+
+  if (btnUpdateChar) {
+    btnUpdateChar.addEventListener("click", () => {
+      const oldName = (charOldName.value || "").trim().toUpperCase();
+      const newName = (charNewName.value || "").trim().toUpperCase();
+
+      if (!oldName || !newName) {
+        ispisiPoruku("❌ Unesi oba imena!", "warning");
+        return;
+      }
+
+      if (!currentCharLock || currentCharLock !== oldName) {
+        ispisiPoruku("⚠️ Prvo zaključaj staro ime!", "warning");
+        return;
+      }
+
+      ispisiPoruku(`✏️ ${oldName} → ${newName}...`, "info");
+
+      PoziviAjaxFetch.updateCharacter(scenarioId, userId, oldName, newName, (status, data) => {
+        if (status === 200) {
+          ispisiPoruku(`✅ ${data?.message}`, "success");
+          currentCharLock = null;
+          btnUpdateChar.disabled = true;
+          btnLockChar.disabled = false;
+          charNameInput.value = "";
+          charOldName.value = "";
+          charNewName.value = "";
+          
+          setTimeout(() => loadScenario(), 500);
+        } else if (status === 409) {
+          ispisiPoruku(`❌ KONFLIKT: ${data?.message}`, "error");
+        } else if (status === 404) {
+          ispisiPoruku(`❌ ${data?.message}`, "error");
+        } else {
+          ispisiPoruku(`❌ ${data?.message}`, "error");
+        }
       });
     });
   }
@@ -292,7 +428,10 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       }
 
-      loadScenario();
+      ispisiPoruku(
+        `🔄 NOVA DELTA: ${deltas.length} promjena. Osvježi stranicu!`,
+        "info"
+      );
     });
-  }, 2000);
+  }, 3000);
 });
