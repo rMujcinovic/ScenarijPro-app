@@ -18,7 +18,7 @@
 <body>
   <header class="topbar">
     <div class="left">
-      <button class="icon-btn" aria-label="Nazad">
+      <button class="icon-btn" aria-label="Nazad" onclick="window.location.href='../html/projects.html'">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
             stroke-linejoin="round"></path>
@@ -33,6 +33,7 @@
       <button class="chip">LIK</button>
       <button class="chip">DIJALOG</button>
     </div>
+
     <div class="right">
       <button class="save-btn" type="button">
         <span class="save-btn-icon" aria-hidden="true">
@@ -46,16 +47,30 @@
     </div>
   </header>
 
+  <section class="editor-tools editor-tools-lock" aria-label="Lock kontrole">
+    <div class="lock-controls-inline">
+      <button id="btnLockLine" class="btn-lock-line">🔒 LOCK LINE #1</button>
+
+      <div class="lock-separator"></div>
+
+      <input type="text" id="charNameInput" class="charNameInput" placeholder="ALICE">
+      <button id="btnLockChar" class="btn-lock-char">🔒 Lock</button>
+      <input type="text" id="charOldName" class="charOldName" placeholder="Old">
+      <input type="text" id="charNewName" class="charNewName" placeholder="New">
+      <button id="btnUpdateChar" class="btn-update-char" disabled>✏️ Update</button>
+    </div>
+  </section>
+
   <section class="editor-tools" aria-label="Alati editora">
     <div class="editor-tools-row">
       <button id="btnBrojRijeci" type="button">Broj riječi</button>
       <button id="btnUloge" type="button">Uloge</button>
       <button id="btnPogresneUloge" type="button">Pogrešne uloge</button>
 
-      <input id="inputUlogaLinije" type="text" placeholder="ULOGA za broj linija" />
+      <input id="inputUlogaLinije" type="text" placeholder="ULOGA za broj linija">
       <button id="btnBrojLinija" type="button">Broj linija</button>
 
-      <input id="inputUlogaScenarij" type="text" placeholder="ULOGA za scenarij" />
+      <input id="inputUlogaScenarij" type="text" placeholder="ULOGA za scenarij">
       <button id="btnScenarijUloge" type="button">Scenarij uloge</button>
 
       <button id="btnGrupeUloga" type="button">Grupiši uloge</button>
