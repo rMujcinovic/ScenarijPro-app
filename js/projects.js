@@ -1,30 +1,51 @@
 document.addEventListener("DOMContentLoaded", function () {
+  const btnNewScenario = document.getElementById("btnNewScenario");
+  const createBtn = document.querySelector(".create-button");
+
   if (typeof PoziviAjaxFetch === "undefined") {
-    console.warn("PoziviAjaxFetch nije učitan.");
+    console.error("PoziviAjaxFetch nije učitan");
     return;
   }
 
-  const btnNew = document.getElementById("btnNewScenario");
-  if (!btnNew) return;
+  function askUserId() {
+    const last = localStorage.getItem("userId") || "1";
+    const input = prompt("Unesi userId (integer):", last);
+    if (input === null) return null; 
 
-  btnNew.addEventListener("click", function () {
-    const userIdStr = prompt("Unesi userId (integer):", localStorage.getItem("userId") || "1");
-    if (!userIdStr) return;
-
-    const userId = parseInt(userIdStr, 10);
-    if (!Number.isFinite(userId)) return;
+    const userId = Number(String(input).trim());
+    if (!Number.isInteger(userId) || userId < 1) {
+      alert("userId mora biti pozitivan cijeli broj (npr. 1, 2, 3).");
+      return null;
+    }
 
     localStorage.setItem("userId", String(userId));
+    return userId;
+  }
 
-    const title = prompt("Naslov scenarija:", "Neimenovani scenarij") ?? "";
+  function askTitle() {
+    const t = prompt("Unesi naziv scenarija:", "Neimenovani scenarij");
+    if (t === null) return null; 
+    return String(t);
+  }
+
+  function createScenarioFlow() {
+    const userId = askUserId();
+    if (userId === null) return;
+
+    const title = askTitle();
+    if (title === null) return;
 
     PoziviAjaxFetch.postScenario(title, (status, data) => {
       if (status !== 200) {
-        alert(data?.message || "Greška pri kreiranju scenarija.");
+        alert("Greška pri kreiranju scenarija: " + (data?.message || "Nepoznata greška"));
         return;
       }
-      localStorage.setItem("scenarioId", String(data.id));
-      window.location.href = `writing.html?scenarioId=${data.id}&userId=${userId}`;
+
+      const scenarioId = data.id;
+      window.location.href = `/html/writing.html?scenarioId=${scenarioId}&userId=${userId}`;
     });
-  });
+  }
+
+  if (btnNewScenario) btnNewScenario.addEventListener("click", createScenarioFlow);
+  if (createBtn) createBtn.addEventListener("click", createScenarioFlow);
 });
