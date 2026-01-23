@@ -11,6 +11,8 @@ const Line = sequelize.define(
     text: { type: DataTypes.TEXT, allowNull: false, defaultValue: "" },
 
     nextLineId: { type: DataTypes.INTEGER, allowNull: true },
+
+    scenarioId: { type: DataTypes.INTEGER, allowNull: false },
   },
   { tableName: "Line", timestamps: false }
 );
