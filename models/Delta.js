@@ -20,7 +20,7 @@ const Delta = sequelize.define(
 
     timestamp: { type: DataTypes.INTEGER, allowNull: false },
   },
-  { tableName: "deltas", timestamps: false }
+  { tableName: "Delta", timestamps: false }
 );
 
 module.exports = Delta;

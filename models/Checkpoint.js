@@ -7,7 +7,7 @@ const Checkpoint = sequelize.define(
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     timestamp: { type: DataTypes.INTEGER, allowNull: false },
   },
-  { tableName: "checkpoints", timestamps: false }
+  { tableName: "Checkpoint", timestamps: false }
 );
 
 module.exports = Checkpoint;

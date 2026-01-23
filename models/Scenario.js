@@ -7,7 +7,7 @@ const Scenario = sequelize.define(
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     title: { type: DataTypes.STRING, allowNull: false },
   },
-  { tableName: "scenarios", timestamps: false }
+  { tableName: "Scenario", timestamps: false }
 );
 
 module.exports = Scenario;

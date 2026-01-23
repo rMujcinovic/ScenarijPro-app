@@ -12,7 +12,7 @@ const Line = sequelize.define(
 
     nextLineId: { type: DataTypes.INTEGER, allowNull: true },
   },
-  { tableName: "lines", timestamps: false }
+  { tableName: "Line", timestamps: false }
 );
 
 module.exports = Line;
