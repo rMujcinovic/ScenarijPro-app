@@ -8,6 +8,9 @@ app.use(express.json());
 const { sequelize } = require("./db");
 require("./models"); // da se modeli i relacije registruju
 
+const { Op } = require("sequelize");
+const { Scenario, Line, Delta, Checkpoint } = require("./models");
+
 // frontend povezivanje
 app.use(express.static(__dirname));
 
@@ -58,15 +61,30 @@ async function appendDelta(delta) {
   const deltas = await readAllDeltas();
   deltas.push(delta);
   await fs.writeFile(DELTAS_PATH, JSON.stringify(deltas, null, 2), "utf-8");
+
+  try {
+    await Delta.create({
+      scenarioId: delta.scenarioId,
+      type: delta.type,
+      lineId: delta.lineId ?? null,
+      nextLineId: delta.nextLineId ?? null,
+      content: delta.content ?? null,
+      oldName: delta.oldName ?? null,
+      newName: delta.newName ?? null,
+      timestamp: delta.timestamp
+    });
+  } catch (e) {
+    // ignore
+  }
 }
 
 function nowUnixSeconds() {
   return Math.floor(Date.now() / 1000);
 }
 
-const lineLocks = new Map();      
-const userLineLock = new Map();   
-const characterLocks = new Map(); 
+const lineLocks = new Map();
+const userLineLock = new Map();
+const characterLocks = new Map();
 
 function getScenarioCharLocks(scenarioId) {
   if (!characterLocks.has(scenarioId)) characterLocks.set(scenarioId, new Map());
@@ -144,7 +162,7 @@ function extractWordsSpirala2(text) {
 function wrapTextToLines(text, maxWords = 20) {
   const raw = String(text ?? "");
   const words = extractWordsSpirala2(raw);
-  if (words.length === 0) return [raw]; 
+  if (words.length === 0) return [raw];
   const out = [];
   for (let i = 0; i < words.length; i += maxWords) {
     out.push(words.slice(i, i + maxWords).join(" "));
@@ -260,7 +278,7 @@ app.put("/api/scenarios/:scenarioId/lines/:lineId", async (req, res) => {
 
     line.text = produced[0] ?? "";
 
-    const affected = [line]; 
+    const affected = [line];
 
     if (produced.length > 1) {
       let nextId = nextLineIdForScenario(scenario);
