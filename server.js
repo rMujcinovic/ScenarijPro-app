@@ -136,6 +136,22 @@ function getScenarioCharLocks(scenarioId) {
   return characterLocks.get(scenarioId);
 }
 
+function splitIntoWords(text) {
+  if (typeof text !== "string") return [];
+  const trimmed = text.trim();
+  if (!trimmed) return [];
+  return trimmed.split(/\s+/);
+}
+
+function wrapWordsIntoChunks(words, chunkSize = 20) {
+  const chunks = [];
+  for (let i = 0; i < words.length; i += chunkSize) {
+    chunks.push(words.slice(i, i + chunkSize).join(" "));
+  }
+  return chunks;
+}
+
+
 function unlockUsersPreviousLineLock(userId) {
   const prev = userLineLock.get(userId);
   if (!prev) return;
@@ -149,34 +165,41 @@ function unlockUsersPreviousLineLock(userId) {
 
 function buildOrderedContent(content) {
   if (!Array.isArray(content) || content.length === 0) return [];
-  const byId = new Map(content.map((l) => [l.lineId, l]));
 
-  const referenced = new Set();
-  for (const l of content) {
-    if (l.nextLineId !== null && l.nextLineId !== undefined) referenced.add(l.nextLineId);
+  const byId = new Map(content.map((l) => [l.lineId, { ...l }]));
+
+  const nextSet = new Set();
+  for (const l of byId.values()) {
+    if (l.nextLineId != null) nextSet.add(l.nextLineId);
   }
-  let head = content.find((l) => !referenced.has(l.lineId));
-  if (!head) head = content[0];
+
+  let start = null;
+  for (const l of byId.values()) {
+    if (!nextSet.has(l.lineId)) {
+      start = l;
+      break;
+    }
+  }
+  if (!start) start = byId.values().next().value;
 
   const ordered = [];
-  const visited = new Set();
-  let cur = head;
-  while (cur && !visited.has(cur.lineId)) {
-    visited.add(cur.lineId);
+  const seen = new Set();
+  let cur = start;
+
+  while (cur && !seen.has(cur.lineId)) {
     ordered.push(cur);
-    cur = cur.nextLineId == null ? null : byId.get(cur.nextLineId);
+    seen.add(cur.lineId);
+    cur = cur.nextLineId != null ? byId.get(cur.nextLineId) : null;
   }
 
-  if (ordered.length !== content.length) {
-    const remaining = content
-      .filter((l) => !visited.has(l.lineId))
-      .sort((a, b) => a.lineId - b.lineId);
-    ordered.push(...remaining);
+  for (const l of byId.values()) {
+    if (!seen.has(l.lineId)) ordered.push(l);
   }
   return ordered;
 }
 
-function isWordChar(ch) {
+
+/* function isWordChar(ch) {
   return /[0-9A-Za-zÀ-ž\-']/.test(ch);
 }
 function hasLetter(str) {
@@ -219,7 +242,7 @@ function explodeNewTextArray(newTextArr) {
   const result = [];
   for (const s of newTextArr) result.push(...wrapTextToLines(s, 20));
   return result;
-}
+} */
 
 async function nextScenarioId() {
   const files = await fs.readdir(SCENARIOS_DIR);
