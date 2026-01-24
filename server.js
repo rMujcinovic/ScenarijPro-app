@@ -354,21 +354,28 @@ app.put("/api/scenarios/:scenarioId/lines/:lineId", async (req, res) => {
     const userId = Number(req.body && req.body.userId);
     const newText = req.body && req.body.newText;
 
-    const scenario = await readScenario(scenarioId);
-    if (!ensureScenarioExists(scenario)) return res.status(404).json({ message: "Scenario ne postoji!" });
-
-    const line = findLine(scenario, lineId);
-    if (!line) return res.status(404).json({ message: "Linija ne postoji!" });
-
-    if (!Array.isArray(newText) || newText.length === 0) {
-      return res.status(400).json({ message: "Niz new_text ne smije biti prazan!" });
+    if (!scenarioId || !lineId || !userId || !Array.isArray(newText)) {
+      return res.status(400).json({ message: "Bad request" });
     }
 
-    // mora biti zakljucana
+    const scenario = await readScenario(scenarioId);
+    if (!ensureScenarioExists(scenario)) {
+      return res.status(404).json({ message: "Scenario ne postoji!" });
+    }
+
+    const line = findLine(scenario, lineId);
+    if (!line) {
+      return res.status(404).json({ message: "Linija ne postoji!" });
+    }
+
+    if (isLineLockedByOther(scenarioId, lineId, userId)) {
+      return res.status(409).json({ message: "Linija je vec zakljucana!" });
+    }
+
     const key = getLineLockKey(scenarioId, lineId);
-    const existing = lineLocks.get(key);
-    if (!existing) return res.status(409).json({ message: "Linija nije zakljucana!" });
-    if (existing !== userId) return res.status(409).json({ message: "Linija je vec zakljucana!" });
+    if (!lineLocks.has(key)) {
+      lockLineForUser(scenarioId, lineId, userId);
+    }
 
     const produced = explodeNewTextArray(newText);
     const originalNext = line.nextLineId;
@@ -383,7 +390,11 @@ app.put("/api/scenarios/:scenarioId/lines/:lineId", async (req, res) => {
 
       const newLines = [];
       for (let i = 1; i < produced.length; i++) {
-        const newObj = { lineId: nextId++, nextLineId: null, text: produced[i] ?? "" };
+        const newObj = {
+          lineId: nextId++,
+          nextLineId: null,
+          text: produced[i] ?? ""
+        };
         scenario.content.push(newObj);
         newLines.push(newObj);
       }
@@ -413,11 +424,12 @@ app.put("/api/scenarios/:scenarioId/lines/:lineId", async (req, res) => {
 
     unlockLineIfOwned(scenarioId, lineId, userId);
 
-    return res.status(200).json({ message: "Linija je uspjesno azurirana!" });
+    return res.status(200).json({ message: "Linija uspjesno azurirana!" });
   } catch {
     return res.status(500).json({ message: "Server error" });
   }
 });
+
 
 // POST /api/scenarios/:scenarioId/characters/lock
 app.post("/api/scenarios/:scenarioId/characters/lock", async (req, res) => {
@@ -472,28 +484,27 @@ app.post("/api/scenarios/:scenarioId/characters/update", async (req, res) => {
     const oldName = (req.body && typeof req.body.oldName === "string" ? req.body.oldName : "").trim();
     const newName = (req.body && typeof req.body.newName === "string" ? req.body.newName : "").trim();
 
-    const scenario = await readScenario(scenarioId);
-    if (!ensureScenarioExists(scenario)) return res.status(404).json({ message: "Scenario ne postoji!" });
+    if (!scenarioId || !userId || !oldName || !newName) {
+      return res.status(400).json({ message: "Bad request" });
+    }
 
+    const scenario = await readScenario(scenarioId);
+    if (!ensureScenarioExists(scenario)) {
+      return res.status(404).json({ message: "Scenario ne postoji!" });
+    }
+
+    if (isCharacterLockedByOther(scenarioId, oldName, userId)) {
+      return res.status(409).json({ message: "Lik je vec zakljucan!" });
+    }
 
     const locks = getScenarioCharLocks(scenarioId);
-    const owner = locks.get(oldName);
-    if (owner !== userId) {
-      return res.status(409).json({ message: "Konflikt! Ime lika je vec zakljucano!" });
+    if (!locks.has(oldName)) {
+      lockCharacter(scenarioId, oldName, userId);
     }
 
-    for (const l of scenario.content) {
-      if (typeof l.text === "string" && l.text.includes(oldName)) {
-        const lk = lineLocks.get(getLineLockKey(scenarioId, l.lineId));
-        if (lk && lk !== userId) {
-          return res.status(409).json({ message: "Konflikt! Linija je vec zakljucana!" });
-        }
-      }
-    }
-
-    for (const l of scenario.content) {
-      if (typeof l.text === "string" && l.text.includes(oldName)) {
-        l.text = l.text.split(oldName).join(newName);
+    for (const line of scenario.content || []) {
+      if (typeof line.text === "string" && line.text.includes(oldName)) {
+        line.text = line.text.split(oldName).join(newName);
       }
     }
 
@@ -507,13 +518,14 @@ app.post("/api/scenarios/:scenarioId/characters/update", async (req, res) => {
       timestamp: nowUnixSeconds()
     });
 
-    locks.delete(oldName);
+    unlockCharacterIfOwned(scenarioId, oldName, userId);
 
-    return res.status(200).json({ message: "Ime lika je uspjesno promijenjeno!" });
+    return res.status(200).json({ message: "Lik uspjesno azuriran!" });
   } catch {
     return res.status(500).json({ message: "Server error" });
   }
 });
+
 
 // GET /api/scenarios/:scenarioId/deltas?since=timestamp
 app.get("/api/scenarios/:scenarioId/deltas", async (req, res) => {
