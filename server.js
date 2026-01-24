@@ -178,7 +178,6 @@ function buildOrderedContent(content) {
   const ordered = [];
   const seen = new Set();
   let cur = start;
-
   while (cur && !seen.has(cur.lineId)) {
     ordered.push(cur);
     seen.add(cur.lineId);
@@ -188,6 +187,7 @@ function buildOrderedContent(content) {
   for (const l of byId.values()) {
     if (!seen.has(l.lineId)) ordered.push(l);
   }
+
   return ordered;
 }
 
@@ -199,18 +199,6 @@ async function nextScenarioId() {
     if (m) maxId = Math.max(maxId, Number(m[1]));
   }
   return maxId + 1;
-}
-
-function nextLineIdForScenario(scenario) {
-  let maxLineId = 0;
-  for (const l of scenario.content || []) {
-    if (typeof l.lineId === "number") maxLineId = Math.max(maxLineId, l.lineId);
-  }
-  return maxLineId + 1;
-}
-
-function findLine(scenario, lineId) {
-  return (scenario.content || []).find((l) => l.lineId === lineId) || null;
 }
 
 function ensureScenarioExists(scenario) {
@@ -280,6 +268,55 @@ function unlockCharacterIfOwned(scenarioId, characterName, userId) {
   return false;
 }
 
+function findMaxLineId(scenario) {
+  let maxLineId = 0;
+  for (const l of scenario.content || []) {
+    if (typeof l.lineId === "number") maxLineId = Math.max(maxLineId, l.lineId);
+  }
+  return maxLineId + 1;
+}
+
+function findLine(scenario, lineId) {
+  return (scenario.content || []).find((l) => l.lineId === lineId) || null;
+}
+
+function baseScenarioState(scenarioId, title) {
+  return {
+    id: scenarioId,
+    title,
+    content: [{ lineId: 1, nextLineId: null, text: "" }]
+  };
+}
+
+function applyDeltasToScenario(scenarioObj, deltas) {
+  const byId = new Map((scenarioObj.content || []).map((l) => [l.lineId, { ...l }]));
+
+  for (const d of deltas) {
+    if (d.type === "line_update") {
+      if (!byId.has(d.lineId)) {
+        byId.set(d.lineId, { lineId: d.lineId, nextLineId: null, text: "" });
+      }
+      const line = byId.get(d.lineId);
+      line.text = d.content ?? "";
+      line.nextLineId = d.nextLineId ?? null;
+    }
+
+    if (d.type === "char_rename") {
+      const oldName = d.oldName ?? "";
+      const newName = d.newName ?? "";
+      if (oldName.length > 0) {
+        for (const line of byId.values()) {
+          if (typeof line.text === "string" && line.text.includes(oldName)) {
+            line.text = line.text.split(oldName).join(newName);
+          }
+        }
+      }
+    }
+  }
+
+  const content = Array.from(byId.values()).sort((a, b) => a.lineId - b.lineId);
+  return { ...scenarioObj, content: buildOrderedContent(content) };
+}
 
 // POST /api/scenarios
 app.post("/api/scenarios", async (req, res) => {
@@ -295,6 +332,26 @@ app.post("/api/scenarios", async (req, res) => {
     };
 
     await writeScenario(scenario);
+
+    try {
+      await Scenario.findOrCreate({
+        where: { id },
+        defaults: { id, title: finalTitle }
+      });
+
+      const existingLines = await Line.count({ where: { scenarioId: id } });
+      if (existingLines === 0) {
+        await Line.create({
+          scenarioId: id,
+          lineId: 1,
+          text: "",
+          nextLineId: null
+        });
+      }
+    } catch (e) {
+      // ignore
+    }
+
     return res.status(200).json(scenario);
   } catch {
     return res.status(500).json({ message: "Server error" });
@@ -386,7 +443,7 @@ app.put("/api/scenarios/:scenarioId/lines/:lineId", async (req, res) => {
     const affected = [line];
 
     if (produced.length > 1) {
-      let nextId = nextLineIdForScenario(scenario);
+      let nextId = findMaxLineId(scenario);
 
       const newLines = [];
       for (let i = 1; i < produced.length; i++) {
@@ -429,7 +486,6 @@ app.put("/api/scenarios/:scenarioId/lines/:lineId", async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 });
-
 
 // POST /api/scenarios/:scenarioId/characters/lock
 app.post("/api/scenarios/:scenarioId/characters/lock", async (req, res) => {
@@ -526,20 +582,19 @@ app.post("/api/scenarios/:scenarioId/characters/update", async (req, res) => {
   }
 });
 
-
 // GET /api/scenarios/:scenarioId/deltas?since=timestamp
 app.get("/api/scenarios/:scenarioId/deltas", async (req, res) => {
   try {
     const scenarioId = Number(req.params.scenarioId);
-    const since = Number(req.query.since ?? 0);
+    const since = req.query && req.query.since ? Number(req.query.since) : null;
+
+    if (!scenarioId) return res.status(400).json({ message: "Bad request" });
 
     const scenario = await readScenario(scenarioId);
     if (!ensureScenarioExists(scenario)) return res.status(404).json({ message: "Scenario ne postoji!" });
 
-    const deltas = await readAllDeltas();
-    const filtered = deltas
-      .filter((d) => d.scenarioId === scenarioId && Number(d.timestamp) > since)
-      .sort((a, b) => Number(a.timestamp) - Number(b.timestamp));
+    const all = await readAllDeltas();
+    const filtered = all.filter((d) => d.scenarioId === scenarioId && (since == null || d.timestamp > since));
 
     return res.status(200).json({ deltas: filtered });
   } catch {
@@ -551,12 +606,87 @@ app.get("/api/scenarios/:scenarioId/deltas", async (req, res) => {
 app.get("/api/scenarios/:scenarioId", async (req, res) => {
   try {
     const scenarioId = Number(req.params.scenarioId);
+    if (!scenarioId) return res.status(400).json({ message: "Bad request" });
 
     const scenario = await readScenario(scenarioId);
     if (!ensureScenarioExists(scenario)) return res.status(404).json({ message: "Scenario ne postoji!" });
 
     const ordered = buildOrderedContent(scenario.content);
     return res.status(200).json({ ...scenario, content: ordered });
+  } catch {
+    return res.status(500).json({ message: "Server error" });
+  }
+});
+
+
+app.post("/api/scenarios/:scenarioId/checkpoint", async (req, res) => {
+  try {
+    const scenarioId = Number(req.params.scenarioId);
+
+    const scenario = await Scenario.findByPk(scenarioId);
+    if (!scenario) return res.status(404).json({ message: "Scenario ne postoji!" });
+
+    await Checkpoint.create({
+      scenarioId,
+      timestamp: nowUnixSeconds()
+    });
+
+    return res.status(200).json({ message: "Checkpoint je uspjesno kreiran!" });
+  } catch {
+    return res.status(500).json({ message: "Server error" });
+  }
+});
+
+app.get("/api/scenarios/:scenarioId/checkpoints", async (req, res) => {
+  try {
+    const scenarioId = Number(req.params.scenarioId);
+
+    const scenario = await Scenario.findByPk(scenarioId);
+    if (!scenario) return res.status(404).json({ message: "Scenario ne postoji!" });
+
+    const cps = await Checkpoint.findAll({
+      where: { scenarioId },
+      attributes: ["id", "timestamp"],
+      order: [["timestamp", "ASC"]],
+      raw: true
+    });
+
+    return res.status(200).json(cps);
+  } catch {
+    return res.status(500).json({ message: "Server error" });
+  }
+});
+
+app.get("/api/scenarios/:scenarioId/restore/:checkpointId", async (req, res) => {
+  try {
+    const scenarioId = Number(req.params.scenarioId);
+    const checkpointId = Number(req.params.checkpointId);
+
+    const scenario = await Scenario.findByPk(scenarioId);
+    if (!scenario) return res.status(404).json({ message: "Scenario ne postoji!" });
+
+    const cp = await Checkpoint.findOne({
+      where: { id: checkpointId, scenarioId },
+      raw: true
+    });
+
+    if (!cp) {
+      return res.status(404).json({ message: "Scenario ne postoji!" });
+    }
+
+    const deltas = await Delta.findAll({
+      where: {
+        scenarioId,
+        timestamp: { [Op.lte]: cp.timestamp }
+      },
+      order: [["timestamp", "ASC"], ["id", "ASC"]],
+      raw: true
+    });
+
+    const base = baseScenarioState(scenarioId, scenario.title);
+    const restored = applyDeltasToScenario(base, deltas);
+
+    return res.status(200).json(restored);
   } catch {
     return res.status(500).json({ message: "Server error" });
   }
