@@ -82,49 +82,6 @@ function nowUnixSeconds() {
   return Math.floor(Date.now() / 1000);
 }
 
-async function seedDatabaseFromFiles() {
-  const files = await fs.readdir(SCENARIOS_DIR);
-  const scenarioFiles = files.filter((f) => /^scenario-\d+\.json$/.test(f));
-
-  for (const file of scenarioFiles) {
-    const raw = await fs.readFile(path.join(SCENARIOS_DIR, file), "utf-8");
-    const scen = JSON.parse(raw);
-
-    await Scenario.findOrCreate({
-      where: { id: scen.id },
-      defaults: { id: scen.id, title: scen.title }
-    });
-
-    const existingLines = await Line.count({ where: { scenarioId: scen.id } });
-    if (existingLines === 0) {
-      await Line.create({
-        scenarioId: scen.id,
-        lineId: 1,
-        text: "",
-        nextLineId: null
-      });
-    }
-  }
-
-  const fileDeltas = await readAllDeltas();
-  const existingDeltas = await Delta.count();
-
-  if (existingDeltas === 0 && Array.isArray(fileDeltas) && fileDeltas.length > 0) {
-    const mapped = fileDeltas.map((d) => ({
-      scenarioId: d.scenarioId,
-      type: d.type,
-      lineId: d.lineId ?? null,
-      nextLineId: d.nextLineId ?? null,
-      content: d.content ?? null,
-      oldName: d.oldName ?? null,
-      newName: d.newName ?? null,
-      timestamp: d.timestamp
-    }));
-
-    await Delta.bulkCreate(mapped);
-  }
-}
-
 const lineLocks = new Map();      
 const userLineLock = new Map();   
 const characterLocks = new Map(); 
@@ -698,7 +655,6 @@ app.get("/api/scenarios/:scenarioId/restore/:checkpointId", async (req, res) => 
     await sequelize.sync({ force: true });
 
     await ensureDataLayout();
-    await seedDatabaseFromFiles();
 
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => console.log(`API listening on :${PORT}`));
