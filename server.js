@@ -16,24 +16,13 @@ app.use(express.static(__dirname));
 
 const DATA_DIR = path.join(__dirname, "data");
 const SCENARIOS_DIR = path.join(DATA_DIR, "scenarios");
-const DELTAS_PATH = path.join(DATA_DIR, "deltas.json");
 
 async function ensureDataLayout() {
   await fs.mkdir(SCENARIOS_DIR, { recursive: true });
-  try {
-    await fs.access(DELTAS_PATH);
-  } catch {
-    await fs.writeFile(DELTAS_PATH, JSON.stringify([], null, 2), "utf-8");
-  }
 }
 
 function nowUnixSeconds() {
   return Math.floor(Date.now() / 1000);
-}
-
-async function readAllDeltas() {
-  const raw = await fs.readFile(DELTAS_PATH, "utf-8");
-  return JSON.parse(raw);
 }
 
 async function seedDatabaseFromFiles() {
@@ -63,25 +52,6 @@ async function seedDatabaseFromFiles() {
           }))
         );
       }
-    }
-  }
-
-  const existingDeltas = await Delta.count();
-  if (existingDeltas === 0) {
-    const fileDeltas = await readAllDeltas();
-    if (Array.isArray(fileDeltas) && fileDeltas.length > 0) {
-      await Delta.bulkCreate(
-        fileDeltas.map((d) => ({
-          scenarioId: d.scenarioId,
-          type: d.type,
-          lineId: d.lineId ?? null,
-          nextLineId: d.nextLineId ?? null,
-          content: d.content ?? null,
-          oldName: d.oldName ?? null,
-          newName: d.newName ?? null,
-          timestamp: d.timestamp
-        }))
-      );
     }
   }
 }
