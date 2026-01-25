@@ -82,6 +82,57 @@ function nowUnixSeconds() {
   return Math.floor(Date.now() / 1000);
 }
 
+async function seedDatabaseFromFiles() {
+  const scenarioFiles = (await fs.readdir(SCENARIOS_DIR)).filter((f) => /^scenario-\d+\.json$/.test(f));
+
+  for (const file of scenarioFiles) {
+    const raw = await fs.readFile(path.join(SCENARIOS_DIR, file), "utf-8");
+    const scen = JSON.parse(raw);
+
+    await Scenario.findOrCreate({
+      where: { id: scen.id },
+      defaults: { id: scen.id, title: scen.title }
+    });
+
+    const existingLines = await Line.count({ where: { scenarioId: scen.id } });
+    if (existingLines === 0) {
+      const lines = Array.isArray(scen.content) ? scen.content : [];
+      if (lines.length === 0) {
+        await Line.create({ scenarioId: scen.id, lineId: 1, text: "", nextLineId: null });
+      } else {
+        await Line.bulkCreate(
+          lines.map((l) => ({
+            scenarioId: scen.id,
+            lineId: l.lineId,
+            text: l.text ?? "",
+            nextLineId: l.nextLineId ?? null
+          }))
+        );
+      }
+    }
+  }
+
+  const existingDeltas = await Delta.count();
+  if (existingDeltas === 0) {
+    const fileDeltas = await readAllDeltas();
+    if (Array.isArray(fileDeltas) && fileDeltas.length > 0) {
+      await Delta.bulkCreate(
+        fileDeltas.map((d) => ({
+          scenarioId: d.scenarioId,
+          type: d.type,
+          lineId: d.lineId ?? null,
+          nextLineId: d.nextLineId ?? null,
+          content: d.content ?? null,
+          oldName: d.oldName ?? null,
+          newName: d.newName ?? null,
+          timestamp: d.timestamp
+        }))
+      );
+    }
+  }
+}
+
+
 const lineLocks = new Map();
 const userLineLock = new Map();
 const characterLocks = new Map();
@@ -771,6 +822,7 @@ app.get("/api/scenarios/:scenarioId/restore/:checkpointId", async (req, res) => 
     await sequelize.sync({ force: true });
 
     await ensureDataLayout();
+    await seedDatabaseFromFiles();
 
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => console.log(`API listening on :${PORT}`));
@@ -779,3 +831,4 @@ app.get("/api/scenarios/:scenarioId/restore/:checkpointId", async (req, res) => 
     process.exit(1);
   }
 })();
+
