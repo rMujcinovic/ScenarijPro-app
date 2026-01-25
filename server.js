@@ -199,15 +199,6 @@ function buildOrderedContent(content) {
   return ordered;
 }
 
-async function nextScenarioId() {
-  const files = await fs.readdir(SCENARIOS_DIR);
-  let maxId = 0;
-  for (const f of files) {
-    const m = /^scenario-(\d+)\.json$/.exec(f);
-    if (m) maxId = Math.max(maxId, Number(m[1]));
-  }
-  return maxId + 1;
-}
 
 function ensureScenarioExists(scenario) {
   return scenario && typeof scenario.id === "number" && Array.isArray(scenario.content);
@@ -332,39 +323,24 @@ app.post("/api/scenarios", async (req, res) => {
     const title = (req.body && typeof req.body.title === "string" ? req.body.title : "").trim();
     const finalTitle = title.length > 0 ? title : "Neimenovani scenarij";
 
-    const id = await nextScenarioId();
-    const scenario = {
+    const created = await Scenario.create({ title: finalTitle });
+    const id = created.id;
+
+    await Line.findOrCreate({
+      where: { scenarioId: id, lineId: 1 },
+      defaults: { scenarioId: id, lineId: 1, text: "", nextLineId: null }
+    });
+
+    return res.status(200).json({
       id,
       title: finalTitle,
       content: [{ lineId: 1, nextLineId: null, text: "" }]
-    };
-
-    await writeScenario(scenario);
-
-    try {
-      await Scenario.findOrCreate({
-        where: { id },
-        defaults: { id, title: finalTitle }
-      });
-
-      const existingLines = await Line.count({ where: { scenarioId: id } });
-      if (existingLines === 0) {
-        await Line.create({
-          scenarioId: id,
-          lineId: 1,
-          text: "",
-          nextLineId: null
-        });
-      }
-    } catch (e) {
-      // ignore
-    }
-
-    return res.status(200).json(scenario);
+    });
   } catch {
     return res.status(500).json({ message: "Server error" });
   }
 });
+
 
 // POST /api/scenarios/:scenarioId/lines/:lineId/lock
 app.post("/api/scenarios/:scenarioId/lines/:lineId/lock", async (req, res) => {
