@@ -82,9 +82,9 @@ function nowUnixSeconds() {
   return Math.floor(Date.now() / 1000);
 }
 
-const lineLocks = new Map();      
-const userLineLock = new Map();   
-const characterLocks = new Map(); 
+const lineLocks = new Map();
+const userLineLock = new Map();
+const characterLocks = new Map();
 
 function getScenarioCharLocks(scenarioId) {
   if (!characterLocks.has(scenarioId)) characterLocks.set(scenarioId, new Map());
@@ -547,13 +547,36 @@ app.get("/api/scenarios/:scenarioId/deltas", async (req, res) => {
 
     if (!scenarioId) return res.status(400).json({ message: "Bad request" });
 
-    const scenario = await readScenario(scenarioId);
-    if (!ensureScenarioExists(scenario)) return res.status(404).json({ message: "Scenario ne postoji!" });
+    const scenDb = await Scenario.findByPk(scenarioId, { raw: true });
 
-    const all = await readAllDeltas();
-    const filtered = all.filter((d) => d.scenarioId === scenarioId && (since == null || d.timestamp > since));
+    if (!scenDb) {
+      const scenarioFs = await readScenario(scenarioId);
+      if (!ensureScenarioExists(scenarioFs)) return res.status(404).json({ message: "Scenario ne postoji!" });
 
-    return res.status(200).json({ deltas: filtered });
+      const all = await readAllDeltas();
+      const filtered = all.filter((d) => d.scenarioId === scenarioId && (since == null || d.timestamp > since));
+      return res.status(200).json({ deltas: filtered });
+    }
+
+    const where = { scenarioId };
+    if (since != null && !Number.isNaN(since)) {
+      where.timestamp = { [Op.gt]: since };
+    }
+
+    const dbDeltas = await Delta.findAll({
+      where,
+      attributes: ["scenarioId", "type", "lineId", "nextLineId", "content", "oldName", "newName", "timestamp"],
+      order: [["timestamp", "ASC"], ["id", "ASC"]],
+      raw: true
+    });
+
+    if (!dbDeltas || dbDeltas.length === 0) {
+      const all = await readAllDeltas();
+      const filtered = all.filter((d) => d.scenarioId === scenarioId && (since == null || d.timestamp > since));
+      return res.status(200).json({ deltas: filtered });
+    }
+
+    return res.status(200).json({ deltas: dbDeltas });
   } catch {
     return res.status(500).json({ message: "Server error" });
   }
@@ -565,6 +588,28 @@ app.get("/api/scenarios/:scenarioId", async (req, res) => {
     const scenarioId = Number(req.params.scenarioId);
     if (!scenarioId) return res.status(400).json({ message: "Bad request" });
 
+    const scenDb = await Scenario.findByPk(scenarioId, { raw: true });
+
+    if (scenDb) {
+      const lines = await Line.findAll({
+        where: { scenarioId },
+        attributes: ["lineId", "nextLineId", "text"],
+        order: [["lineId", "ASC"]],
+        raw: true
+      });
+
+      if (!lines || lines.length === 0) {
+        const scenarioFs = await readScenario(scenarioId);
+        if (!ensureScenarioExists(scenarioFs)) return res.status(404).json({ message: "Scenario ne postoji!" });
+
+        const orderedFs = buildOrderedContent(scenarioFs.content);
+        return res.status(200).json({ ...scenarioFs, content: orderedFs });
+      }
+
+      const ordered = buildOrderedContent(lines);
+      return res.status(200).json({ id: scenarioId, title: scenDb.title, content: ordered });
+    }
+
     const scenario = await readScenario(scenarioId);
     if (!ensureScenarioExists(scenario)) return res.status(404).json({ message: "Scenario ne postoji!" });
 
@@ -574,7 +619,6 @@ app.get("/api/scenarios/:scenarioId", async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 });
-
 
 app.post("/api/scenarios/:scenarioId/checkpoint", async (req, res) => {
   try {
