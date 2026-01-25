@@ -1,6 +1,4 @@
 const express = require("express");
-const fs = require("fs/promises");
-const path = require("path");
 
 const app = express();
 app.use(express.json());
@@ -14,48 +12,10 @@ const { Scenario, Line, Delta, Checkpoint } = require("./models");
 // frontend povezivanje
 app.use(express.static(__dirname));
 
-const DATA_DIR = path.join(__dirname, "data");
-const SCENARIOS_DIR = path.join(DATA_DIR, "scenarios");
-
-async function ensureDataLayout() {
-  await fs.mkdir(SCENARIOS_DIR, { recursive: true });
-}
 
 function nowUnixSeconds() {
   return Math.floor(Date.now() / 1000);
 }
-
-async function seedDatabaseFromFiles() {
-  const scenarioFiles = (await fs.readdir(SCENARIOS_DIR)).filter((f) => /^scenario-\d+\.json$/.test(f));
-
-  for (const file of scenarioFiles) {
-    const raw = await fs.readFile(path.join(SCENARIOS_DIR, file), "utf-8");
-    const scen = JSON.parse(raw);
-
-    await Scenario.findOrCreate({
-      where: { id: scen.id },
-      defaults: { id: scen.id, title: scen.title }
-    });
-
-    const existingLines = await Line.count({ where: { scenarioId: scen.id } });
-    if (existingLines === 0) {
-      const lines = Array.isArray(scen.content) ? scen.content : [];
-      if (lines.length === 0) {
-        await Line.create({ scenarioId: scen.id, lineId: 1, text: "", nextLineId: null });
-      } else {
-        await Line.bulkCreate(
-          lines.map((l) => ({
-            scenarioId: scen.id,
-            lineId: l.lineId,
-            text: l.text ?? "",
-            nextLineId: l.nextLineId ?? null
-          }))
-        );
-      }
-    }
-  }
-}
-
 
 const lineLocks = new Map();
 const userLineLock = new Map();
