@@ -514,48 +514,50 @@ app.put("/api/scenarios/:scenarioId/lines/:lineId", async (req, res) => {
 
 // POST /api/scenarios/:scenarioId/characters/lock
 app.post("/api/scenarios/:scenarioId/characters/lock", async (req, res) => {
-  try {
-    const scenarioId = Number(req.params.scenarioId);
-    const userId = Number(req.body && req.body.userId);
-    const characterName = (req.body && typeof req.body.characterName === "string" ? req.body.characterName : "").trim();
+  const scenarioId = Number(req.params.scenarioId);
+  const userId = Number(req.body && req.body.userId);
+  const characterName = (req.body && typeof req.body.characterName === "string" ? req.body.characterName : "").trim();
 
-    if (!scenarioId || !userId || !characterName) return res.status(400).json({ message: "Bad request" });
+  if (!scenarioId || !userId || !characterName) return res.status(400).json({ message: "Bad request" });
 
-    const scenario = await readScenario(scenarioId);
-    if (!ensureScenarioExists(scenario)) return res.status(404).json({ message: "Scenario ne postoji!" });
+  const scenDb = await Scenario.findByPk(scenarioId, { raw: true });
 
-    if (isCharacterLockedByOther(scenarioId, characterName, userId)) {
-      return res.status(409).json({ message: "Lik je vec zakljucan!" });
-    }
-
-    lockCharacter(scenarioId, characterName, userId);
-    return res.status(200).json({ message: "Lik uspjesno zakljucan!" });
-  } catch {
-    return res.status(500).json({ message: "Server error" });
+  if (!scenDb) {
+    const scenarioFs = await readScenario(scenarioId);
+    if (!ensureScenarioExists(scenarioFs)) return res.status(404).json({ message: "Scenario ne postoji!" });
   }
+
+  if (isCharacterLockedByOther(scenarioId, characterName, userId)) {
+    return res.status(409).json({ message: "Lik je vec zakljucan!" });
+  }
+
+  lockCharacter(scenarioId, characterName, userId);
+  return res.status(200).json({ message: "Lik uspjesno zakljucan!" });
 });
+
 
 // POST /api/scenarios/:scenarioId/characters/unlock
 app.post("/api/scenarios/:scenarioId/characters/unlock", async (req, res) => {
-  try {
-    const scenarioId = Number(req.params.scenarioId);
-    const userId = Number(req.body && req.body.userId);
-    const characterName = (req.body && typeof req.body.characterName === "string" ? req.body.characterName : "").trim();
+  const scenarioId = Number(req.params.scenarioId);
+  const userId = Number(req.body && req.body.userId);
+  const characterName = (req.body && typeof req.body.characterName === "string" ? req.body.characterName : "").trim();
 
-    if (!scenarioId || !userId || !characterName) return res.status(400).json({ message: "Bad request" });
+  if (!scenarioId || !userId || !characterName) return res.status(400).json({ message: "Bad request" });
 
-    const scenario = await readScenario(scenarioId);
-    if (!ensureScenarioExists(scenario)) return res.status(404).json({ message: "Scenario ne postoji!" });
+  const scenDb = await Scenario.findByPk(scenarioId, { raw: true });
 
-    if (!unlockCharacterIfOwned(scenarioId, characterName, userId)) {
-      return res.status(409).json({ message: "Ne mozete otkljucati lika!" });
-    }
-
-    return res.status(200).json({ message: "Lik uspjesno otkljucan!" });
-  } catch {
-    return res.status(500).json({ message: "Server error" });
+  if (!scenDb) {
+    const scenarioFs = await readScenario(scenarioId);
+    if (!ensureScenarioExists(scenarioFs)) return res.status(404).json({ message: "Scenario ne postoji!" });
   }
+
+  if (!unlockCharacterIfOwned(scenarioId, characterName, userId)) {
+    return res.status(409).json({ message: "Ne mozete otkljucati lika!" });
+  }
+
+  return res.status(200).json({ message: "Lik uspjesno otkljucan!" });
 });
+
 
 // POST /api/scenarios/:scenarioId/characters/update
 app.post("/api/scenarios/:scenarioId/characters/update", async (req, res) => {
