@@ -27,59 +27,13 @@ async function ensureDataLayout() {
   }
 }
 
-function scenarioFilePath(id) {
-  return path.join(SCENARIOS_DIR, `scenario-${id}.json`);
-}
-
-async function fileExists(p) {
-  try {
-    await fs.access(p);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-async function readScenario(id) {
-  const p = scenarioFilePath(id);
-  if (!(await fileExists(p))) return null;
-  const raw = await fs.readFile(p, "utf-8");
-  return JSON.parse(raw);
-}
-
-async function writeScenario(scenario) {
-  const p = scenarioFilePath(scenario.id);
-  await fs.writeFile(p, JSON.stringify(scenario, null, 2), "utf-8");
+function nowUnixSeconds() {
+  return Math.floor(Date.now() / 1000);
 }
 
 async function readAllDeltas() {
   const raw = await fs.readFile(DELTAS_PATH, "utf-8");
   return JSON.parse(raw);
-}
-
-async function appendDelta(delta) {
-  const deltas = await readAllDeltas();
-  deltas.push(delta);
-  await fs.writeFile(DELTAS_PATH, JSON.stringify(deltas, null, 2), "utf-8");
-
-  try {
-    await Delta.create({
-      scenarioId: delta.scenarioId,
-      type: delta.type,
-      lineId: delta.lineId ?? null,
-      nextLineId: delta.nextLineId ?? null,
-      content: delta.content ?? null,
-      oldName: delta.oldName ?? null,
-      newName: delta.newName ?? null,
-      timestamp: delta.timestamp
-    });
-  } catch (e) {
-    // ignore
-  }
-}
-
-function nowUnixSeconds() {
-  return Math.floor(Date.now() / 1000);
 }
 
 async function seedDatabaseFromFiles() {
@@ -199,11 +153,6 @@ function buildOrderedContent(content) {
   return ordered;
 }
 
-
-function ensureScenarioExists(scenario) {
-  return scenario && typeof scenario.id === "number" && Array.isArray(scenario.content);
-}
-
 function getLineLockKey(scenarioId, lineId) {
   return `${scenarioId}:${lineId}`;
 }
@@ -265,18 +214,6 @@ function unlockCharacterIfOwned(scenarioId, characterName, userId) {
     return true;
   }
   return false;
-}
-
-function findMaxLineId(scenario) {
-  let maxLineId = 0;
-  for (const l of scenario.content || []) {
-    if (typeof l.lineId === "number") maxLineId = Math.max(maxLineId, l.lineId);
-  }
-  return maxLineId + 1;
-}
-
-function findLine(scenario, lineId) {
-  return (scenario.content || []).find((l) => l.lineId === lineId) || null;
 }
 
 function baseScenarioState(scenarioId, title) {
@@ -350,7 +287,7 @@ app.post("/api/scenarios/:scenarioId/lines/:lineId/lock", async (req, res) => {
 
   if (!scenarioId || !lineId || !userId) return res.status(400).json({ message: "Bad request" });
 
-  const scenDb = await Scenario.findByPk(scenarioId, { raw: true });
+  const scenDb = await Scenario.findByPk(scenarioId);
   if (!scenDb) return res.status(404).json({ message: "Scenario ne postoji!" });
 
   if (isLineLockedByOther(scenarioId, lineId, userId)) {
@@ -393,7 +330,7 @@ app.put("/api/scenarios/:scenarioId/lines/:lineId", async (req, res) => {
       return res.status(409).json({ message: "Linija je vec zakljucana!" });
     }
 
-    const scenDb = await Scenario.findByPk(scenarioId, { raw: true });
+    const scenDb = await Scenario.findByPk(scenarioId);
     if (!scenDb) return res.status(404).json({ message: "Scenario ne postoji!" });
 
     const lineDb = await Line.findOne({ where: { scenarioId, lineId }, raw: true });
@@ -488,7 +425,7 @@ app.post("/api/scenarios/:scenarioId/characters/lock", async (req, res) => {
 
   if (!scenarioId || !userId || !characterName) return res.status(400).json({ message: "Bad request" });
 
-  const scenDb = await Scenario.findByPk(scenarioId, { raw: true });
+  const scenDb = await Scenario.findByPk(scenarioId);
   if (!scenDb) return res.status(404).json({ message: "Scenario ne postoji!" });
 
   if (isCharacterLockedByOther(scenarioId, characterName, userId)) {
@@ -507,7 +444,7 @@ app.post("/api/scenarios/:scenarioId/characters/unlock", async (req, res) => {
 
   if (!scenarioId || !userId || !characterName) return res.status(400).json({ message: "Bad request" });
 
-  const scenDb = await Scenario.findByPk(scenarioId, { raw: true });
+  const scenDb = await Scenario.findByPk(scenarioId);
   if (!scenDb) return res.status(404).json({ message: "Scenario ne postoji!" });
 
   if (!unlockCharacterIfOwned(scenarioId, characterName, userId)) {
@@ -529,7 +466,7 @@ app.post("/api/scenarios/:scenarioId/characters/update", async (req, res) => {
   if (!scenarioId || !userId || !oldName || !newName)
     return res.status(400).json({ message: "Bad request" });
 
-  const scenDb = await Scenario.findByPk(scenarioId, { raw: true });
+  const scenDb = await Scenario.findByPk(scenarioId);
   if (!scenDb) return res.status(404).json({ message: "Scenario ne postoji!" });
 
   if (isCharacterLockedByOther(scenarioId, oldName, userId))
@@ -566,7 +503,7 @@ app.get("/api/scenarios/:scenarioId/deltas", async (req, res) => {
 
     if (!scenarioId) return res.status(400).json({ message: "Bad request" });
 
-    const scenDb = await Scenario.findByPk(scenarioId, { raw: true });
+    const scenDb = await Scenario.findByPk(scenarioId);
     if (!scenDb) return res.status(404).json({ message: "Scenario ne postoji!" });
 
     const where = { scenarioId };
@@ -591,7 +528,7 @@ app.get("/api/scenarios/:scenarioId", async (req, res) => {
     const scenarioId = Number(req.params.scenarioId);
     if (!scenarioId) return res.status(400).json({ message: "Bad request" });
 
-    const scenDb = await Scenario.findByPk(scenarioId, { raw: true });
+    const scenDb = await Scenario.findByPk(scenarioId);
     if (!scenDb) return res.status(404).json({ message: "Scenario ne postoji!" });
 
     const lines = await Line.findAll({
